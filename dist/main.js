@@ -3,6 +3,7 @@ var __create = Object.create;
 var __getProtoOf = Object.getPrototypeOf;
 var __defProp = Object.defineProperty;
 var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
 function __accessProp(key) {
   return this[key];
@@ -31,6 +32,23 @@ var __toESM = (mod, isNodeMode, target) => {
     cache.set(mod, to);
   return to;
 };
+var __toCommonJS = (from) => {
+  var entry = (__moduleCache ??= new WeakMap).get(from), desc;
+  if (entry)
+    return entry;
+  entry = __defProp({}, "__esModule", { value: true });
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (var key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(entry, key))
+        __defProp(entry, key, {
+          get: __accessProp.bind(from, key),
+          enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable
+        });
+  }
+  __moduleCache.set(from, entry);
+  return entry;
+};
+var __moduleCache;
 var __commonJS = (cb, mod) => () => (mod || cb((mod = { exports: {} }).exports, mod), mod.exports);
 var __returnValue = (v) => v;
 function __exportSetter(name, newValue) {
@@ -44,6 +62,17 @@ var __export = (target, all) => {
       configurable: true,
       set: __exportSetter.bind(all, name)
     });
+};
+var __esm = (fn, res, err) => () => {
+  if (fn)
+    try {
+      res = fn(fn = 0);
+    } catch (e) {
+      err = [e];
+    }
+  if (err)
+    throw err[0];
+  return res;
 };
 var __exportCjs = (target, getters, setters) => {
   for (var name in getters)
@@ -22392,6 +22421,153 @@ var require_browser = __commonJS(function(exports, module) {
   };
 });
 
+// node_modules/.bun/supports-color@10.2.2/node_modules/supports-color/index.js
+var exports_supports_color = {};
+__export(exports_supports_color, {
+  createSupportsColor: () => createSupportsColor,
+  default: () => supports_color_default
+});
+import process4 from "node:process";
+import os8 from "node:os";
+import tty from "node:tty";
+function hasFlag(flag, argv = globalThis.Deno ? globalThis.Deno.args : process4.argv) {
+  const prefix = flag.startsWith("-") ? "" : flag.length === 1 ? "-" : "--";
+  const position = argv.indexOf(prefix + flag);
+  const terminatorPosition = argv.indexOf("--");
+  return position !== -1 && (terminatorPosition === -1 || position < terminatorPosition);
+}
+function envForceColor() {
+  if (!("FORCE_COLOR" in env)) {
+    return;
+  }
+  if (env.FORCE_COLOR === "true") {
+    return 1;
+  }
+  if (env.FORCE_COLOR === "false") {
+    return 0;
+  }
+  if (env.FORCE_COLOR.length === 0) {
+    return 1;
+  }
+  const level = Math.min(Number.parseInt(env.FORCE_COLOR, 10), 3);
+  if (![0, 1, 2, 3].includes(level)) {
+    return;
+  }
+  return level;
+}
+function translateLevel(level) {
+  if (level === 0) {
+    return false;
+  }
+  return {
+    level,
+    hasBasic: true,
+    has256: level >= 2,
+    has16m: level >= 3
+  };
+}
+function _supportsColor(haveStream, { streamIsTTY, sniffFlags = true } = {}) {
+  const noFlagForceColor = envForceColor();
+  if (noFlagForceColor !== undefined) {
+    flagForceColor = noFlagForceColor;
+  }
+  const forceColor = sniffFlags ? flagForceColor : noFlagForceColor;
+  if (forceColor === 0) {
+    return 0;
+  }
+  if (sniffFlags) {
+    if (hasFlag("color=16m") || hasFlag("color=full") || hasFlag("color=truecolor")) {
+      return 3;
+    }
+    if (hasFlag("color=256")) {
+      return 2;
+    }
+  }
+  if ("TF_BUILD" in env && "AGENT_NAME" in env) {
+    return 1;
+  }
+  if (haveStream && !streamIsTTY && forceColor === undefined) {
+    return 0;
+  }
+  const min = forceColor || 0;
+  if (env.TERM === "dumb") {
+    return min;
+  }
+  if (process4.platform === "win32") {
+    const osRelease = os8.release().split(".");
+    if (Number(osRelease[0]) >= 10 && Number(osRelease[2]) >= 10586) {
+      return Number(osRelease[2]) >= 14931 ? 3 : 2;
+    }
+    return 1;
+  }
+  if ("CI" in env) {
+    if (["GITHUB_ACTIONS", "GITEA_ACTIONS", "CIRCLECI"].some((key) => (key in env))) {
+      return 3;
+    }
+    if (["TRAVIS", "APPVEYOR", "GITLAB_CI", "BUILDKITE", "DRONE"].some((sign) => (sign in env)) || env.CI_NAME === "codeship") {
+      return 1;
+    }
+    return min;
+  }
+  if ("TEAMCITY_VERSION" in env) {
+    return /^(9\.(0*[1-9]\d*)\.|\d{2,}\.)/.test(env.TEAMCITY_VERSION) ? 1 : 0;
+  }
+  if (env.COLORTERM === "truecolor") {
+    return 3;
+  }
+  if (env.TERM === "xterm-kitty") {
+    return 3;
+  }
+  if (env.TERM === "xterm-ghostty") {
+    return 3;
+  }
+  if (env.TERM === "wezterm") {
+    return 3;
+  }
+  if ("TERM_PROGRAM" in env) {
+    const version = Number.parseInt((env.TERM_PROGRAM_VERSION || "").split(".")[0], 10);
+    switch (env.TERM_PROGRAM) {
+      case "iTerm.app": {
+        return version >= 3 ? 3 : 2;
+      }
+      case "Apple_Terminal": {
+        return 2;
+      }
+    }
+  }
+  if (/-256(color)?$/i.test(env.TERM)) {
+    return 2;
+  }
+  if (/^screen|^xterm|^vt100|^vt220|^rxvt|color|ansi|cygwin|linux/i.test(env.TERM)) {
+    return 1;
+  }
+  if ("COLORTERM" in env) {
+    return 1;
+  }
+  return min;
+}
+function createSupportsColor(stream, options = {}) {
+  const level = _supportsColor(stream, {
+    streamIsTTY: stream && stream.isTTY,
+    ...options
+  });
+  return translateLevel(level);
+}
+var env, flagForceColor, supportsColor, supports_color_default;
+var init_supports_color = __esm(() => {
+  ({ env } = process4);
+  if (hasFlag("no-color") || hasFlag("no-colors") || hasFlag("color=false") || hasFlag("color=never")) {
+    flagForceColor = 0;
+  } else if (hasFlag("color") || hasFlag("colors") || hasFlag("color=true") || hasFlag("color=always")) {
+    flagForceColor = 1;
+  }
+  supportsColor = {
+    stdout: createSupportsColor({ isTTY: tty.isatty(1) }),
+    stderr: createSupportsColor({ isTTY: tty.isatty(2) })
+  };
+  supports_color_default = supportsColor;
+});
+
 // node_modules/.bun/debug@4.4.3/node_modules/debug/src/node.js
 var require_node = __commonJS(function(exports, module) {
   var tty = __require("tty");
@@ -22405,7 +22581,7 @@ var require_node = __commonJS(function(exports, module) {
   exports.destroy = util.deprecate(() => {}, "Instance method `debug.destroy()` is deprecated and no longer does anything. It will be removed in the next major version of `debug`.");
   exports.colors = [6, 2, 3, 4, 5, 1];
   try {
-    const supportsColor = (()=>{throw new Error("Cannot require module "+"supports-color");})();
+    const supportsColor = (init_supports_color(), __toCommonJS(exports_supports_color));
     if (supportsColor && (supportsColor.stderr || supportsColor).level >= 2) {
       exports.colors = [
         20,
@@ -23255,7 +23431,7 @@ var require_balanced_match = __commonJS(function(exports, module) {
   }
 });
 
-// node_modules/.bun/brace-expansion@2.1.7/node_modules/brace-expansion/index.js
+// node_modules/.bun/brace-expansion@2.0.2/node_modules/brace-expansion/index.js
 var require_brace_expansion = __commonJS(function(exports, module) {
   var balanced = require_balanced_match();
   module.exports = expandTop;
@@ -23264,10 +23440,6 @@ var require_brace_expansion = __commonJS(function(exports, module) {
   var escClose = "\x00CLOSE" + Math.random() + "\x00";
   var escComma = "\x00COMMA" + Math.random() + "\x00";
   var escPeriod = "\x00PERIOD" + Math.random() + "\x00";
-  var EXPANSION_MAX = 1e5;
-  var EXPANSION_MAX_LENGTH = 4000000;
-  var EXPANSION_MAX_DEPTH = 1000;
-  var EXPANSION_MAX_REWRITES = 1000;
   function numeric(str) {
     return parseInt(str, 10) == str ? parseInt(str, 10) : str.charCodeAt(0);
   }
@@ -23277,49 +23449,33 @@ var require_brace_expansion = __commonJS(function(exports, module) {
   function unescapeBraces(str) {
     return str.split(escSlash).join("\\").split(escOpen).join("{").split(escClose).join("}").split(escComma).join(",").split(escPeriod).join(".");
   }
-  function pushAll(target, items) {
-    for (var i = 0;i < items.length; i++) {
-      target.push(items[i]);
-    }
-  }
   function parseCommaParts(str) {
+    if (!str)
+      return [""];
     var parts = [];
-    var carry = "";
-    for (;; ) {
-      var m = balanced("{", "}", str);
-      if (!m) {
-        var tail = str.split(",");
-        tail[0] = carry + tail[0];
-        pushAll(parts, tail);
-        return parts;
-      }
-      var pre = m.pre;
-      var body = m.body;
-      var post = m.post;
-      var p = pre.split(",");
-      p[0] = carry + p[0];
-      p[p.length - 1] += "{" + body + "}";
-      if (!post.length) {
-        pushAll(parts, p);
-        return parts;
-      }
-      carry = p.pop();
-      pushAll(parts, p);
-      str = post;
+    var m = balanced("{", "}", str);
+    if (!m)
+      return str.split(",");
+    var pre = m.pre;
+    var body = m.body;
+    var post = m.post;
+    var p = pre.split(",");
+    p[p.length - 1] += "{" + body + "}";
+    var postParts = parseCommaParts(post);
+    if (post.length) {
+      p[p.length - 1] += postParts.shift();
+      p.push.apply(p, postParts);
     }
+    parts.push.apply(parts, p);
+    return parts;
   }
-  function expandTop(str, options) {
+  function expandTop(str) {
     if (!str)
       return [];
-    options = options || {};
-    var max = options.max == null ? EXPANSION_MAX : options.max;
-    var maxLength = options.maxLength == null ? EXPANSION_MAX_LENGTH : options.maxLength;
-    var maxDepth = options.maxDepth == null ? EXPANSION_MAX_DEPTH : options.maxDepth;
-    var maxRewrites = options.maxRewrites == null ? EXPANSION_MAX_REWRITES : options.maxRewrites;
     if (str.substr(0, 2) === "{}") {
       str = "\\{\\}" + str.substr(2);
     }
-    return expand(escapeBraces(str), max, maxLength, maxDepth, 0, maxRewrites, true).map(unescapeBraces);
+    return expand(escapeBraces(str), true).map(unescapeBraces);
   }
   function embrace(str) {
     return "{" + str + "}";
@@ -23333,153 +23489,94 @@ var require_brace_expansion = __commonJS(function(exports, module) {
   function gte(i, y) {
     return i >= y;
   }
-  function combine(acc, pre, values, max, maxLength, dropEmpties) {
-    var out = [];
-    var length = 0;
-    for (var a = 0;a < acc.length; a++) {
-      for (var v = 0;v < values.length; v++) {
-        if (out.length >= max)
-          return out;
-        var expansion = acc[a] + pre + values[v];
-        if (dropEmpties && !expansion)
-          continue;
-        if (length + expansion.length > maxLength)
-          return out;
-        out.push(expansion);
-        length += expansion.length;
-      }
-    }
-    return out;
-  }
-  function expandSequence(body, isAlphaSequence, max, maxLength) {
-    var n = body.split(/\.\./);
-    var N = [];
-    if (n[0] === undefined || n[1] === undefined) {
-      return N;
-    }
-    var x = numeric(n[0]);
-    var y = numeric(n[1]);
-    var width = Math.max(n[0].length, n[1].length);
-    var incr = n.length === 3 && n[2] !== undefined ? Math.max(Math.abs(numeric(n[2])), 1) : 1;
-    var test = lte;
-    var reverse = y < x;
-    if (reverse) {
-      incr *= -1;
-      test = gte;
-    }
-    var pad = n.some(isPadded);
-    var length = 0;
-    for (var i = x;test(i, y) && N.length < max; i += incr) {
-      var c;
-      if (isAlphaSequence) {
-        c = String.fromCharCode(i);
-        if (c === "\\") {
-          c = "";
-        }
-      } else {
-        c = String(i);
-        if (pad) {
-          var need = width - c.length;
-          if (need > 0) {
-            var z = new Array(need + 1).join("0");
-            if (i < 0) {
-              c = "-" + z + c.slice(1);
-            } else {
-              c = z + c;
-            }
-          }
-        }
-      }
-      if (length + c.length > maxLength)
-        break;
-      N.push(c);
-      length += c.length;
-    }
-    return N;
-  }
-  function expand(str, max, maxLength, maxDepth, depth, maxRewrites, isTop) {
-    if (depth > maxDepth) {
+  function expand(str, isTop) {
+    var expansions = [];
+    var m = balanced("{", "}", str);
+    if (!m)
       return [str];
-    }
-    var acc = [""];
-    var rewrites = 0;
-    var dropEmpties = false;
-    var firstGroup = true;
-    for (;; ) {
-      const m = balanced("{", "}", str);
-      if (!m) {
-        return combine(acc, str, [""], max, maxLength, dropEmpties);
+    var pre = m.pre;
+    var post = m.post.length ? expand(m.post, false) : [""];
+    if (/\$$/.test(m.pre)) {
+      for (var k = 0;k < post.length; k++) {
+        var expansion = pre + "{" + m.body + "}" + post[k];
+        expansions.push(expansion);
       }
-      const pre = m.pre;
-      if (/\$$/.test(pre)) {
-        acc = combine(acc, pre + "{" + m.body + "}", [""], max, maxLength, dropEmpties && !m.post.length);
-        firstGroup = false;
-        if (!m.post.length)
-          break;
-        str = m.post;
-        continue;
-      }
+    } else {
       var isNumericSequence = /^-?\d+\.\.-?\d+(?:\.\.-?\d+)?$/.test(m.body);
       var isAlphaSequence = /^[a-zA-Z]\.\.[a-zA-Z](?:\.\.-?\d+)?$/.test(m.body);
       var isSequence = isNumericSequence || isAlphaSequence;
       var isOptions = m.body.indexOf(",") >= 0;
       if (!isSequence && !isOptions) {
-        if (rewrites < maxRewrites && m.post.match(/,(?!,).*\}/)) {
-          rewrites++;
+        if (m.post.match(/,(?!,).*\}/)) {
           str = m.pre + "{" + m.body + escClose + m.post;
-          isTop = true;
-          continue;
+          return expand(str);
         }
-        return combine(acc, pre + "{" + m.body + "}" + m.post, [""], max, maxLength, dropEmpties);
+        return [str];
       }
-      if (firstGroup) {
-        dropEmpties = isTop && !isSequence;
-        firstGroup = false;
-      }
-      var values;
+      var n;
       if (isSequence) {
-        values = expandSequence(m.body, isAlphaSequence, max, maxLength);
+        n = m.body.split(/\.\./);
       } else {
-        var n = parseCommaParts(m.body);
-        if (n.length === 1 && n[0] !== undefined) {
-          n = expand(n[0], max, maxLength, maxDepth, depth + 1, maxRewrites, false).map(embrace);
+        n = parseCommaParts(m.body);
+        if (n.length === 1) {
+          n = expand(n[0], false).map(embrace);
           if (n.length === 1) {
-            acc = combine(acc, pre + n[0], [""], max, maxLength, dropEmpties && !m.post.length);
-            if (!m.post.length)
-              break;
-            str = m.post;
-            continue;
+            return post.map(function(p) {
+              return m.pre + n[0] + p;
+            });
           }
         }
-        var dropsEmpties = dropEmpties && !m.post.length && !pre;
-        for (var d = 0;dropsEmpties && d < acc.length; d++) {
-          if (acc[d]) {
-            dropsEmpties = false;
-          }
+      }
+      var N;
+      if (isSequence) {
+        var x = numeric(n[0]);
+        var y = numeric(n[1]);
+        var width = Math.max(n[0].length, n[1].length);
+        var incr = n.length == 3 ? Math.abs(numeric(n[2])) : 1;
+        var test = lte;
+        var reverse = y < x;
+        if (reverse) {
+          incr *= -1;
+          test = gte;
         }
-        values = [];
-        var valuesLength = 0;
-        outer:
-          for (var j = 0;j < n.length; j++) {
-            var expanded = expand(n[j], max, maxLength, maxDepth, depth + 1, maxRewrites, false);
-            for (var k = 0;k < expanded.length; k++) {
-              var v = expanded[k];
-              if (dropsEmpties && !v)
-                continue;
-              if (values.length >= max || valuesLength + v.length > maxLength) {
-                break outer;
+        var pad = n.some(isPadded);
+        N = [];
+        for (var i = x;test(i, y); i += incr) {
+          var c;
+          if (isAlphaSequence) {
+            c = String.fromCharCode(i);
+            if (c === "\\")
+              c = "";
+          } else {
+            c = String(i);
+            if (pad) {
+              var need = width - c.length;
+              if (need > 0) {
+                var z = new Array(need + 1).join("0");
+                if (i < 0)
+                  c = "-" + z + c.slice(1);
+                else
+                  c = z + c;
               }
-              values.push(v);
-              valuesLength += v.length;
             }
           }
+          N.push(c);
+        }
+      } else {
+        N = [];
+        for (var j = 0;j < n.length; j++) {
+          N.push.apply(N, expand(n[j], false));
+        }
       }
-      acc = combine(acc, pre, values, max, maxLength, dropEmpties && !m.post.length);
-      if (!m.post.length)
-        break;
-      str = m.post;
+      for (var j = 0;j < N.length; j++) {
+        for (var k = 0;k < post.length; k++) {
+          var expansion = pre + N[j] + post[k];
+          if (!isTop || isSequence || expansion)
+            expansions.push(expansion);
+        }
+      }
     }
-    return acc;
+    return expansions;
   }
 });
 
@@ -36723,7 +36820,7 @@ var require_isPlainObject = __commonJS(function(exports, module) {
   module.exports = isPlainObject;
 });
 
-// node_modules/.bun/minimatch@9.0.9/node_modules/minimatch/dist/commonjs/assert-valid-pattern.js
+// node_modules/.bun/minimatch@9.0.5/node_modules/minimatch/dist/commonjs/assert-valid-pattern.js
 var require_assert_valid_pattern = __commonJS(function(exports) {
   Object.defineProperty(exports, "__esModule", { value: true });
   exports.assertValidPattern = undefined;
@@ -36739,7 +36836,7 @@ var require_assert_valid_pattern = __commonJS(function(exports) {
   exports.assertValidPattern = assertValidPattern;
 });
 
-// node_modules/.bun/minimatch@9.0.9/node_modules/minimatch/dist/commonjs/brace-expressions.js
+// node_modules/.bun/minimatch@9.0.5/node_modules/minimatch/dist/commonjs/brace-expressions.js
 var require_brace_expressions = __commonJS(function(exports) {
   Object.defineProperty(exports, "__esModule", { value: true });
   exports.parseClass = undefined;
@@ -36854,7 +36951,7 @@ var require_brace_expressions = __commonJS(function(exports) {
   exports.parseClass = parseClass;
 });
 
-// node_modules/.bun/minimatch@9.0.9/node_modules/minimatch/dist/commonjs/unescape.js
+// node_modules/.bun/minimatch@9.0.5/node_modules/minimatch/dist/commonjs/unescape.js
 var require_unescape = __commonJS(function(exports) {
   Object.defineProperty(exports, "__esModule", { value: true });
   exports.unescape = undefined;
@@ -36864,41 +36961,14 @@ var require_unescape = __commonJS(function(exports) {
   exports.unescape = unescape;
 });
 
-// node_modules/.bun/minimatch@9.0.9/node_modules/minimatch/dist/commonjs/ast.js
+// node_modules/.bun/minimatch@9.0.5/node_modules/minimatch/dist/commonjs/ast.js
 var require_ast = __commonJS(function(exports) {
-  var _a;
   Object.defineProperty(exports, "__esModule", { value: true });
   exports.AST = undefined;
   var brace_expressions_js_1 = require_brace_expressions();
   var unescape_js_1 = require_unescape();
   var types = new Set(["!", "?", "+", "*", "@"]);
   var isExtglobType = (c) => types.has(c);
-  var isExtglobAST = (c) => isExtglobType(c.type);
-  var adoptionMap = new Map([
-    ["!", ["@"]],
-    ["?", ["?", "@"]],
-    ["@", ["@"]],
-    ["*", ["*", "+", "?", "@"]],
-    ["+", ["+", "@"]]
-  ]);
-  var adoptionWithSpaceMap = new Map([
-    ["!", ["?"]],
-    ["@", ["?"]],
-    ["+", ["?", "*"]]
-  ]);
-  var adoptionAnyMap = new Map([
-    ["!", ["?", "@"]],
-    ["?", ["?", "@"]],
-    ["@", ["?", "@"]],
-    ["*", ["*", "+", "?", "@"]],
-    ["+", ["+", "@", "?", "*"]]
-  ]);
-  var usurpMap = new Map([
-    ["!", new Map([["!", "@"]])],
-    ["?", new Map([["*", "*"], ["+", "*"]])],
-    ["@", new Map([["!", "!"], ["?", "?"], ["@", "@"], ["*", "*"], ["+", "+"]])],
-    ["+", new Map([["?", "*"], ["*", "*"]])]
-  ]);
   var startNoTraversal = "(?!(?:^|/)\\.\\.?(?:$|/))";
   var startNoDot = "(?!\\.)";
   var addPatternStart = new Set(["[", "."]);
@@ -36986,7 +37056,7 @@ var require_ast = __commonJS(function(exports) {
       for (const p of parts) {
         if (p === "")
           continue;
-        if (typeof p !== "string" && !(p instanceof _a && p.#parent === this)) {
+        if (typeof p !== "string" && !(p instanceof AST && p.#parent === this)) {
           throw new Error("invalid part: " + p);
         }
         this.#parts.push(p);
@@ -37011,7 +37081,7 @@ var require_ast = __commonJS(function(exports) {
       const p = this.#parent;
       for (let i = 0;i < this.#parentIndex; i++) {
         const pp = p.#parts[i];
-        if (!(pp instanceof _a && pp.type === "!")) {
+        if (!(pp instanceof AST && pp.type === "!")) {
           return false;
         }
       }
@@ -37036,14 +37106,13 @@ var require_ast = __commonJS(function(exports) {
         this.push(part.clone(this));
     }
     clone(parent) {
-      const c = new _a(this.type, parent);
+      const c = new AST(this.type, parent);
       for (const p of this.#parts) {
         c.copyIn(p);
       }
       return c;
     }
-    static #parseAST(str, ast, pos, opt, extDepth) {
-      const maxDepth = opt.maxExtglobRecursion ?? 2;
+    static #parseAST(str, ast, pos, opt) {
       let escaping = false;
       let inBrace = false;
       let braceStart = -1;
@@ -37075,12 +37144,11 @@ var require_ast = __commonJS(function(exports) {
             acc += c;
             continue;
           }
-          const doRecurse = !opt.noext && isExtglobType(c) && str.charAt(i) === "(" && extDepth <= maxDepth;
-          if (doRecurse) {
+          if (!opt.noext && isExtglobType(c) && str.charAt(i) === "(") {
             ast.push(acc);
             acc = "";
-            const ext = new _a(c, ast);
-            i = _a.#parseAST(str, ext, i, opt, extDepth + 1);
+            const ext = new AST(c, ast);
+            i = AST.#parseAST(str, ext, i, opt);
             ast.push(ext);
             continue;
           }
@@ -37090,7 +37158,7 @@ var require_ast = __commonJS(function(exports) {
         return i;
       }
       let i = pos + 1;
-      let part = new _a(null, ast);
+      let part = new AST(null, ast);
       const parts = [];
       let acc = "";
       while (i < str.length) {
@@ -37117,21 +37185,19 @@ var require_ast = __commonJS(function(exports) {
           acc += c;
           continue;
         }
-        const doRecurse = isExtglobType(c) && str.charAt(i) === "(" && (extDepth <= maxDepth || ast && ast.#canAdoptType(c));
-        if (doRecurse) {
-          const depthAdd = ast && ast.#canAdoptType(c) ? 0 : 1;
+        if (isExtglobType(c) && str.charAt(i) === "(") {
           part.push(acc);
           acc = "";
-          const ext = new _a(c, part);
+          const ext = new AST(c, part);
           part.push(ext);
-          i = _a.#parseAST(str, ext, i, opt, extDepth + depthAdd);
+          i = AST.#parseAST(str, ext, i, opt);
           continue;
         }
         if (c === "|") {
           part.push(acc);
           acc = "";
           parts.push(part);
-          part = new _a(null, ast);
+          part = new AST(null, ast);
           continue;
         }
         if (c === ")") {
@@ -37150,101 +37216,9 @@ var require_ast = __commonJS(function(exports) {
       ast.#parts = [str.substring(pos - 1)];
       return i;
     }
-    #canAdoptWithSpace(child) {
-      return this.#canAdopt(child, adoptionWithSpaceMap);
-    }
-    #canAdopt(child, map = adoptionMap) {
-      if (!child || typeof child !== "object" || child.type !== null || child.#parts.length !== 1 || this.type === null) {
-        return false;
-      }
-      const gc = child.#parts[0];
-      if (!gc || typeof gc !== "object" || gc.type === null) {
-        return false;
-      }
-      return this.#canAdoptType(gc.type, map);
-    }
-    #canAdoptType(c, map = adoptionAnyMap) {
-      return !!map.get(this.type)?.includes(c);
-    }
-    #adoptWithSpace(child, index) {
-      const gc = child.#parts[0];
-      const blank = new _a(null, gc, this.options);
-      blank.#parts.push("");
-      gc.push(blank);
-      this.#adopt(child, index);
-    }
-    #adopt(child, index) {
-      const gc = child.#parts[0];
-      this.#parts.splice(index, 1, ...gc.#parts);
-      for (const p of gc.#parts) {
-        if (typeof p === "object")
-          p.#parent = this;
-      }
-      this.#toString = undefined;
-    }
-    #canUsurpType(c) {
-      const m = usurpMap.get(this.type);
-      return !!m?.has(c);
-    }
-    #canUsurp(child) {
-      if (!child || typeof child !== "object" || child.type !== null || child.#parts.length !== 1 || this.type === null || this.#parts.length !== 1) {
-        return false;
-      }
-      const gc = child.#parts[0];
-      if (!gc || typeof gc !== "object" || gc.type === null) {
-        return false;
-      }
-      return this.#canUsurpType(gc.type);
-    }
-    #usurp(child) {
-      const m = usurpMap.get(this.type);
-      const gc = child.#parts[0];
-      const nt = m?.get(gc.type);
-      if (!nt)
-        return false;
-      this.#parts = gc.#parts;
-      for (const p of this.#parts) {
-        if (typeof p === "object")
-          p.#parent = this;
-      }
-      this.type = nt;
-      this.#toString = undefined;
-      this.#emptyExt = false;
-    }
-    #flatten() {
-      if (!isExtglobAST(this)) {
-        for (const p of this.#parts) {
-          if (typeof p === "object")
-            p.#flatten();
-        }
-      } else {
-        let iterations = 0;
-        let done = false;
-        do {
-          done = true;
-          for (let i = 0;i < this.#parts.length; i++) {
-            const c = this.#parts[i];
-            if (typeof c === "object") {
-              c.#flatten();
-              if (this.#canAdopt(c)) {
-                done = false;
-                this.#adopt(c, i);
-              } else if (this.#canAdoptWithSpace(c)) {
-                done = false;
-                this.#adoptWithSpace(c, i);
-              } else if (this.#canUsurp(c)) {
-                done = false;
-                this.#usurp(c);
-              }
-            }
-          }
-        } while (!done && ++iterations < 10);
-      }
-      this.#toString = undefined;
-    }
     static fromGlob(pattern, options = {}) {
-      const ast = new _a(null, undefined, options);
-      _a.#parseAST(pattern, ast, 0, options, 0);
+      const ast = new AST(null, undefined, options);
+      AST.#parseAST(pattern, ast, 0, options);
       return ast;
     }
     toMMPattern() {
@@ -37267,14 +37241,12 @@ var require_ast = __commonJS(function(exports) {
     }
     toRegExpSource(allowDot) {
       const dot = allowDot ?? !!this.#options.dot;
-      if (this.#root === this) {
-        this.#flatten();
+      if (this.#root === this)
         this.#fillNegs();
-      }
-      if (!isExtglobAST(this)) {
+      if (!this.type) {
         const noEmpty = this.isStart() && this.isEnd();
         const src = this.#parts.map((p) => {
-          const [re, _2, hasMagic, uflag] = typeof p === "string" ? _a.#parseGlob(p, this.#hasMagic, noEmpty) : p.toRegExpSource(allowDot);
+          const [re, _2, hasMagic, uflag] = typeof p === "string" ? AST.#parseGlob(p, this.#hasMagic, noEmpty) : p.toRegExpSource(allowDot);
           this.#hasMagic = this.#hasMagic || hasMagic;
           this.#uflag = this.#uflag || uflag;
           return re;
@@ -37308,10 +37280,9 @@ var require_ast = __commonJS(function(exports) {
       let body = this.#partsToRegExp(dot);
       if (this.isStart() && this.isEnd() && !body && this.type !== "!") {
         const s = this.toString();
-        const me = this;
-        me.#parts = [s];
-        me.type = null;
-        me.#hasMagic = undefined;
+        this.#parts = [s];
+        this.type = null;
+        this.#hasMagic = undefined;
         return [s, (0, unescape_js_1.unescape)(this.toString()), false, false];
       }
       let bodyDotAllowed = !repeated || allowDot || dot || !startNoDot ? "" : this.#partsToRegExp(true);
@@ -37349,13 +37320,11 @@ var require_ast = __commonJS(function(exports) {
       let escaping = false;
       let re = "";
       let uflag = false;
-      let inStar = false;
       for (let i = 0;i < glob.length; i++) {
         const c = glob.charAt(i);
         if (escaping) {
           escaping = false;
           re += (reSpecials.has(c) ? "\\" : "") + c;
-          inStar = false;
           continue;
         }
         if (c === "\\") {
@@ -37373,19 +37342,16 @@ var require_ast = __commonJS(function(exports) {
             uflag = uflag || needUflag;
             i += consumed - 1;
             hasMagic = hasMagic || magic;
-            inStar = false;
             continue;
           }
         }
         if (c === "*") {
-          if (inStar)
-            continue;
-          inStar = true;
-          re += noEmpty && /^[*]+$/.test(glob) ? starNoEmpty : star;
+          if (noEmpty && glob === "*")
+            re += starNoEmpty;
+          else
+            re += star;
           hasMagic = true;
           continue;
-        } else {
-          inStar = false;
         }
         if (c === "?") {
           re += qmark;
@@ -37398,10 +37364,9 @@ var require_ast = __commonJS(function(exports) {
     }
   }
   exports.AST = AST;
-  _a = AST;
 });
 
-// node_modules/.bun/minimatch@9.0.9/node_modules/minimatch/dist/commonjs/escape.js
+// node_modules/.bun/minimatch@9.0.5/node_modules/minimatch/dist/commonjs/escape.js
 var require_escape = __commonJS(function(exports) {
   Object.defineProperty(exports, "__esModule", { value: true });
   exports.escape = undefined;
@@ -37411,7 +37376,7 @@ var require_escape = __commonJS(function(exports) {
   exports.escape = escape;
 });
 
-// node_modules/.bun/minimatch@9.0.9/node_modules/minimatch/dist/commonjs/index.js
+// node_modules/.bun/minimatch@9.0.5/node_modules/minimatch/dist/commonjs/index.js
 var require_commonjs3 = __commonJS(function(exports) {
   var __importDefault = exports && exports.__importDefault || function(mod) {
     return mod && mod.__esModule ? mod : { default: mod };
@@ -37576,13 +37541,11 @@ var require_commonjs3 = __commonJS(function(exports) {
     isWindows;
     platform;
     windowsNoMagicRoot;
-    maxGlobstarRecursion;
     regexp;
     constructor(pattern, options = {}) {
       (0, assert_valid_pattern_js_1.assertValidPattern)(pattern);
       options = options || {};
       this.options = options;
-      this.maxGlobstarRecursion = options.maxGlobstarRecursion ?? 200;
       this.pattern = pattern;
       this.platform = options.platform || defaultPlatform;
       this.isWindows = this.platform === "win32";
@@ -37877,8 +37840,7 @@ var require_commonjs3 = __commonJS(function(exports) {
       this.negate = negate;
     }
     matchOne(file, pattern, partial = false) {
-      let fileStartIndex = 0;
-      let patternStartIndex = 0;
+      const options = this.options;
       if (this.isWindows) {
         const fileDrive = typeof file[0] === "string" && /^[a-z]:$/i.test(file[0]);
         const fileUNC = !fileDrive && file[0] === "" && file[1] === "" && file[2] === "?" && /^[a-z]:$/i.test(file[3]);
@@ -37887,14 +37849,14 @@ var require_commonjs3 = __commonJS(function(exports) {
         const fdi = fileUNC ? 3 : fileDrive ? 0 : undefined;
         const pdi = patternUNC ? 3 : patternDrive ? 0 : undefined;
         if (typeof fdi === "number" && typeof pdi === "number") {
-          const [fd, pd] = [
-            file[fdi],
-            pattern[pdi]
-          ];
+          const [fd, pd] = [file[fdi], pattern[pdi]];
           if (fd.toLowerCase() === pd.toLowerCase()) {
             pattern[pdi] = fd;
-            patternStartIndex = pdi;
-            fileStartIndex = fdi;
+            if (pdi > fdi) {
+              pattern = pattern.slice(pdi);
+            } else if (fdi > pdi) {
+              file = file.slice(fdi);
+            }
           }
         }
       }
@@ -37902,118 +37864,53 @@ var require_commonjs3 = __commonJS(function(exports) {
       if (optimizationLevel >= 2) {
         file = this.levelTwoFileOptimize(file);
       }
-      if (pattern.includes(exports.GLOBSTAR)) {
-        return this.#matchGlobstar(file, pattern, partial, fileStartIndex, patternStartIndex);
-      }
-      return this.#matchOne(file, pattern, partial, fileStartIndex, patternStartIndex);
-    }
-    #matchGlobstar(file, pattern, partial, fileIndex, patternIndex) {
-      const firstgs = pattern.indexOf(exports.GLOBSTAR, patternIndex);
-      const lastgs = pattern.lastIndexOf(exports.GLOBSTAR);
-      const [head, body, tail] = partial ? [
-        pattern.slice(patternIndex, firstgs),
-        pattern.slice(firstgs + 1),
-        []
-      ] : [
-        pattern.slice(patternIndex, firstgs),
-        pattern.slice(firstgs + 1, lastgs),
-        pattern.slice(lastgs + 1)
-      ];
-      if (head.length) {
-        const fileHead = file.slice(fileIndex, fileIndex + head.length);
-        if (!this.#matchOne(fileHead, head, partial, 0, 0))
-          return false;
-        fileIndex += head.length;
-      }
-      let fileTailMatch = 0;
-      if (tail.length) {
-        if (tail.length + fileIndex > file.length)
-          return false;
-        let tailStart = file.length - tail.length;
-        if (this.#matchOne(file, tail, partial, tailStart, 0)) {
-          fileTailMatch = tail.length;
-        } else {
-          if (file[file.length - 1] !== "" || fileIndex + tail.length === file.length) {
-            return false;
-          }
-          tailStart--;
-          if (!this.#matchOne(file, tail, partial, tailStart, 0))
-            return false;
-          fileTailMatch = tail.length + 1;
-        }
-      }
-      if (!body.length) {
-        let sawSome = !!fileTailMatch;
-        for (let i = fileIndex;i < file.length - fileTailMatch; i++) {
-          const f = String(file[i]);
-          sawSome = true;
-          if (f === "." || f === ".." || !this.options.dot && f.startsWith(".")) {
-            return false;
-          }
-        }
-        return partial || sawSome;
-      }
-      const bodySegments = [[[], 0]];
-      let currentBody = bodySegments[0];
-      let nonGsParts = 0;
-      const nonGsPartsSums = [0];
-      for (const b of body) {
-        if (b === exports.GLOBSTAR) {
-          nonGsPartsSums.push(nonGsParts);
-          currentBody = [[], 0];
-          bodySegments.push(currentBody);
-        } else {
-          currentBody[0].push(b);
-          nonGsParts++;
-        }
-      }
-      let i = bodySegments.length - 1;
-      const fileLength = file.length - fileTailMatch;
-      for (const b of bodySegments) {
-        b[1] = fileLength - (nonGsPartsSums[i--] + b[0].length);
-      }
-      return !!this.#matchGlobStarBodySections(file, bodySegments, fileIndex, 0, partial, 0, !!fileTailMatch);
-    }
-    #matchGlobStarBodySections(file, bodySegments, fileIndex, bodyIndex, partial, globStarDepth, sawTail) {
-      const bs = bodySegments[bodyIndex];
-      if (!bs) {
-        for (let i = fileIndex;i < file.length; i++) {
-          sawTail = true;
-          const f = file[i];
-          if (f === "." || f === ".." || !this.options.dot && f.startsWith(".")) {
-            return false;
-          }
-        }
-        return sawTail;
-      }
-      const [body, after] = bs;
-      while (fileIndex <= after) {
-        const m = this.#matchOne(file.slice(0, fileIndex + body.length), body, partial, fileIndex, 0);
-        if (m && globStarDepth < this.maxGlobstarRecursion) {
-          const sub = this.#matchGlobStarBodySections(file, bodySegments, fileIndex + body.length, bodyIndex + 1, partial, globStarDepth + 1, sawTail);
-          if (sub !== false)
-            return sub;
-        }
-        const f = file[fileIndex];
-        if (f === "." || f === ".." || !this.options.dot && f.startsWith(".")) {
-          return false;
-        }
-        fileIndex++;
-      }
-      return partial || null;
-    }
-    #matchOne(file, pattern, partial, fileIndex, patternIndex) {
-      let fi;
-      let pi;
-      let pl;
-      let fl;
-      for (fi = fileIndex, pi = patternIndex, fl = file.length, pl = pattern.length;fi < fl && pi < pl; fi++, pi++) {
+      this.debug("matchOne", this, { file, pattern });
+      this.debug("matchOne", file.length, pattern.length);
+      for (var fi = 0, pi = 0, fl = file.length, pl = pattern.length;fi < fl && pi < pl; fi++, pi++) {
         this.debug("matchOne loop");
-        let p = pattern[pi];
-        let f = file[fi];
+        var p = pattern[pi];
+        var f = file[fi];
         this.debug(pattern, p, f);
-        if (p === false || p === exports.GLOBSTAR)
+        if (p === false) {
           return false;
+        }
+        if (p === exports.GLOBSTAR) {
+          this.debug("GLOBSTAR", [pattern, p, f]);
+          var fr = fi;
+          var pr = pi + 1;
+          if (pr === pl) {
+            this.debug("** at the end");
+            for (;fi < fl; fi++) {
+              if (file[fi] === "." || file[fi] === ".." || !options.dot && file[fi].charAt(0) === ".")
+                return false;
+            }
+            return true;
+          }
+          while (fr < fl) {
+            var swallowee = file[fr];
+            this.debug(`
+globstar while`, file, fr, pattern, pr, swallowee);
+            if (this.matchOne(file.slice(fr), pattern.slice(pr), partial)) {
+              this.debug("globstar found match!", fr, fl, swallowee);
+              return true;
+            } else {
+              if (swallowee === "." || swallowee === ".." || !options.dot && swallowee.charAt(0) === ".") {
+                this.debug("dot detected!", file, fr, pattern, pr);
+                break;
+              }
+              this.debug("globstar swallow a segment, and continue");
+              fr++;
+            }
+          }
+          if (partial) {
+            this.debug(`
+>>> no match, partial?`, file, fr, pattern, pr);
+            if (fr === fl) {
+              return true;
+            }
+          }
+          return false;
+        }
         let hit;
         if (typeof p === "string") {
           hit = f === p;
@@ -58632,6 +58529,9 @@ var CHILD_SIGINT_GRACE_MS = 2000;
 var CHILD_SIGTERM_GRACE_MS = 1000;
 var STREAM_DRAIN_GRACE_MS = 1000;
 var DEFAULT_SUMMARY_PATH = ".dagactions/summary.md";
+var RERUN_COMMAND = "npx dagactions run";
+var LIVE_MAX_COLUMNS = 72;
+var LIVE_LATEST_LINE_MAX_CHARS = 2 * LIVE_MAX_COLUMNS;
 var DEFAULT_EXCLUDES = [
   "node_modules",
   ".git",
@@ -58646,7 +58546,7 @@ var DEFAULT_EXCLUDES = [
 ];
 var CHECK_TEXT_MAX_CHARS = 65000;
 var MAX_GRAPH_NODES = 60;
-var FAILURE_LOG_LINES = 60;
+var FAILURES_REPORT_LOG_LINES = 60;
 var SUMMARY_BUDGET_BYTES = 900000;
 var CRITICAL_PATH_FLOOR_MS = 1000;
 var LAST_RUN_FILE = "last-run.json";
@@ -58673,8 +58573,10 @@ function createSh(opts = {}) {
   return {
     run: (cmd, runOpts) => new Promise((resolve) => {
       const signal = runOpts?.signal;
+      const onOutput = runOpts?.onOutput ?? (() => {});
       if (signal?.aborted) {
         const message = "cancelled before start";
+        onOutput(message);
         resolve({ code: -1, stdout: "", stderr: message, output: message, ok: false });
         return;
       }
@@ -58700,9 +58602,17 @@ function createSh(opts = {}) {
         signal?.removeEventListener("abort", onAbort);
         resolve(result);
       };
-      proc.stdout.setEncoding("utf8").on("data", (chunk) => out.push(chunk) && all.push(chunk));
-      proc.stderr.setEncoding("utf8").on("data", (chunk) => err.push(chunk) && all.push(chunk));
-      proc.on("error", (e) => settle({ code: -1, stdout: "", stderr: e.message, output: e.message, ok: false }));
+      const recordChunk = (chunks) => (chunk) => {
+        chunks.push(chunk);
+        all.push(chunk);
+        onOutput(chunk);
+      };
+      proc.stdout.setEncoding("utf8").on("data", recordChunk(out));
+      proc.stderr.setEncoding("utf8").on("data", recordChunk(err));
+      proc.on("error", (e) => {
+        onOutput(e.message);
+        settle({ code: -1, stdout: "", stderr: e.message, output: e.message, ok: false });
+      });
       proc.on("exit", () => {
         timers.push(setTimeout(() => {
           proc.stdout.destroy();
@@ -58715,11 +58625,15 @@ function createSh(opts = {}) {
 `) || !text ? "" : `
 `}killed by ${killedBy}
 ` : text;
+        const outputSoFar = all.join("");
+        const output = withKill(outputSoFar);
+        if (output !== outputSoFar)
+          onOutput(output.slice(outputSoFar.length));
         settle({
           code: c,
           stdout: out.join(""),
           stderr: withKill(err.join("")),
-          output: withKill(all.join("")),
+          output,
           ok: c === 0
         });
       });
@@ -58851,11 +58765,13 @@ function addNode({
   timeoutMs
 }) {
   const refs = Object.values(params.deps ?? {}).filter((r) => r != null);
-  const optionalDeps = refs.filter((r) => r.optional).map((r) => r.name);
+  const deps = [...new Set(refs.map((r) => r.name))];
+  const requiredDepNames = new Set(refs.filter((r) => !r.optional).map((r) => r.name));
+  const optionalDeps = deps.filter((dep) => !requiredDepNames.has(dep));
   const registeredName = graph.add({
     name,
     kind: params.kind,
-    deps: refs.map((r) => r.name),
+    deps,
     ...optionalDeps.length > 0 && { optionalDeps },
     config,
     ...concurrencyGroup && { concurrencyGroup },
@@ -59150,16 +59066,14 @@ class ExecState {
             elapsed: result.elapsed
           }
         ];
-      case "fail":
+      case "fail": {
+        const error = new Error(result.error, "cause" in result ? { cause: result.cause } : {});
+        if (result.timedOut)
+          error.name = "TimeoutError";
         return [
-          {
-            type: "fail",
-            node,
-            actionKey: result.actionKey,
-            error: result.timedOut ? Object.assign(new Error(result.error), { name: "TimeoutError" }) : new Error(result.error),
-            elapsed: result.elapsed
-          }
+          { type: "fail", node, actionKey: result.actionKey, error, elapsed: result.elapsed }
         ];
+      }
       case "dep-failed":
         return [{ type: "dep-failed", node, error: new Error(result.error) }];
       case "cancelled":
@@ -59287,17 +59201,21 @@ async function processNode(node, depContentHashes, depOutputs, ctx, opts) {
   opts?.onStart?.();
   const startTime = Date.now();
   const elapsed = () => Date.now() - startTime;
-  const fail = (e) => ({
+  const fail = (e, message = e instanceof Error ? e.message : String(e)) => ({
     name: node.name,
     actionKey,
     status: "fail",
-    error: e instanceof Error ? e.message : String(e),
+    error: message,
+    ...e instanceof Error && e.cause !== undefined && { cause: e.cause },
     elapsed: elapsed()
   });
   const { signal, dispose } = actionSignal(node.timeoutMs, cancel);
   let settled;
   try {
-    settled = { outputs: await node.action(depOutputs, casDir, { signal }) };
+    const output = opts?.onOutput;
+    settled = {
+      outputs: await node.action(depOutputs, casDir, { signal, ...output && { output } })
+    };
   } catch (error) {
     settled = { error };
   } finally {
@@ -59305,8 +59223,9 @@ async function processNode(node, depContentHashes, depOutputs, ctx, opts) {
   }
   if (cancel?.aborted)
     return { name: node.name, actionKey, status: "cancelled" };
+  const thrownError = "error" in settled ? settled.error : undefined;
   if (signal.aborted)
-    return { ...fail(`timed out after ${node.timeoutMs} ms`), timedOut: true };
+    return { ...fail(thrownError, `timed out after ${node.timeoutMs} ms`), timedOut: true };
   if ("error" in settled)
     return fail(settled.error);
   try {
@@ -59345,13 +59264,19 @@ function actionSignal(timeoutMs, cancel) {
 // packages/dagraph/src/schedulers.ts
 function schedulingLoop(hooks) {
   return async (ctx) => {
-    while (ctx.hasWork()) {
+    const dispatch = () => {
       let node;
       while (node = ctx.take(hooks?.filter)) {
         const captured = node;
         hooks?.onStart?.(captured);
-        ctx.run(captured).then(() => hooks?.onEnd?.(captured));
+        ctx.run(captured).then(() => {
+          hooks?.onEnd?.(captured);
+          dispatch();
+        });
       }
+    };
+    while (ctx.hasWork()) {
+      dispatch();
       await ctx.workAvailable();
     }
   };
@@ -59405,7 +59330,8 @@ async function execute(graph, ctx, opts) {
       force: selects(opts?.force, node),
       cacheOnly: selects(opts?.cacheOnly, node),
       ...opts?.signal && { signal: opts.signal },
-      onStart: started
+      onStart: started,
+      ...opts?.onOutput && { onOutput: (chunk) => opts.onOutput(desc, chunk) }
     });
   };
   return orchestrate(nodes.values(), run, scheduler, opts?.onEvent, opts?.signal);
@@ -59482,15 +59408,548 @@ function createMemoryDagFs(initial) {
     ensureDir: async () => {}
   };
 }
+// packages/dagactions/src/kernel/format.ts
+import { stripVTControlCharacters } from "node:util";
+
+// packages/dagactions/src/kernel/report.ts
+var namesOf = (nodes, status) => nodes.filter((node) => node.status === status).map((node) => node.name);
+function rootFailures(nodes) {
+  const failed = new Set(nodes.filter((node) => node.status === "fail" || node.status === "dep-failed").map((node) => node.name));
+  return nodes.filter((node) => node.status === "fail" && !node.deps.some((dep) => failed.has(dep))).map((node) => node.name);
+}
+function wallTimeOf(nodes) {
+  const starts = nodes.flatMap((node) => node.start ?? []);
+  const ends = nodes.flatMap((node) => node.start === undefined ? [] : node.start + (node.duration ?? 0));
+  return starts.length > 0 ? Math.max(...ends) - Math.min(...starts) : 0;
+}
+
+// packages/dagactions/src/kernel/format.ts
+var CONTROL_CHARACTERS = /[\x00-\x08\x0b-\x1f\x7f-\x9f]/g;
+function formatDuration(ms) {
+  return ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`;
+}
+var plural = (count, word) => `${count} ${word}${count === 1 ? "" : "s"}`;
+var errorMessage = (error) => error instanceof Error ? error.message : String(error);
+var titleOf = (workflowFile) => workflowFile ?? "run";
+function logLines(text) {
+  const trimmed = text.trimEnd();
+  return trimmed ? trimmed.split(`
+`) : [];
+}
+var isDebugCommand = (text) => text.startsWith("::debug::");
+var textAfterLastReturn = (line) => line.slice(line.replace(/\r+$/, "").lastIndexOf("\r") + 1);
+function plainLine(line, maxLength = Infinity) {
+  const plainText = stripVTControlCharacters(textAfterLastReturn(line).slice(0, 2 * maxLength)).replace(CONTROL_CHARACTERS, "");
+  return plainText.length > maxLength ? `${plainText.slice(0, maxLength)}…` : plainText;
+}
+var cancelledHeadline = (notRunCount) => `${STATUS_ICON.cancelled} cancelled, ${plural(notRunCount, "node")} not run`;
+function reportHeadline(nodes, rootFailureNames = rootFailures(nodes)) {
+  const skippedCount = namesOf(nodes, "dep-failed").length;
+  const cancelledCount = namesOf(nodes, "cancelled").length;
+  if (rootFailureNames.length > 3)
+    return `${STATUS_ICON.fail} ${rootFailureNames.slice(0, 3).join(", ")} and ${rootFailureNames.length - 3} more failed`;
+  if (rootFailureNames.length > 0)
+    return `${STATUS_ICON.fail} ${rootFailureNames.join(", ")} failed`;
+  if (skippedCount > 0)
+    return `${STATUS_ICON["dep-failed"]} ${plural(skippedCount, "node")} skipped, a dependency failed`;
+  if (cancelledCount > 0)
+    return cancelledHeadline(cancelledCount);
+  return `${STATUS_ICON.done} ${nodes.length === 1 ? "1 node" : `all ${nodes.length} nodes`} succeeded`;
+}
+function countsLine(nodes, formatCount) {
+  const countOf = (status) => namesOf(nodes, status).length;
+  return `built ${formatCount(countOf("done"))} · cached ${formatCount(countOf("cached"))} · failed ${formatCount(countOf("fail"))} · skipped ${formatCount(countOf("dep-failed"))}${countOf("cancelled") > 0 ? ` · cancelled ${formatCount(countOf("cancelled"))}` : ""}`;
+}
+function groupLines(nodeState, log) {
+  if (nodeState.status === "fail")
+    return [...log, "── error ──", ...logLines(nodeState.error)];
+  if (nodeState.status === "dep-failed")
+    return [nodeState.error];
+  return log;
+}
+
+// packages/dagactions/src/kernel/selectors.ts
+var exports_selectors = {};
+__export(exports_selectors, {
+  actionKeyOf: () => actionKeyOf,
+  causesOf: () => causesOf,
+  consequencesOf: () => consequencesOf,
+  dispatchedAtOf: () => dispatchedAtOf,
+  durationOf: () => durationOf,
+  failedDepsOf: () => failedDepsOf,
+  isOwnFailure: () => isOwnFailure,
+  isSettled: () => isSettled,
+  nodeReports: () => nodeReports,
+  nodesInFlight: () => nodesInFlight,
+  ownFailures: () => ownFailures,
+  runStartedAt: () => runStartedAt
+});
+var isSettled = (nodeState) => nodeState.status !== "pending" && nodeState.status !== "dispatched" && nodeState.status !== "running";
+var isInFlight = (nodeState) => nodeState.status === "dispatched" || nodeState.status === "running";
+var dispatchedAtOf = (nodeState) => ("dispatchedAt" in nodeState) ? nodeState.dispatchedAt : undefined;
+var actionKeyOf = (nodeState) => ("actionKey" in nodeState) ? nodeState.actionKey : undefined;
+function durationOf(nodeState) {
+  const dispatchedAt = dispatchedAtOf(nodeState);
+  return dispatchedAt === undefined || !isSettled(nodeState) ? undefined : Math.max(1, nodeState.endedAt - dispatchedAt);
+}
+var nodesInFlight = (run) => [...run.nodes.values()].filter(isInFlight).sort((earlier, later) => earlier.dispatchedAt - later.dispatchedAt);
+function runStartedAt(run) {
+  const starts = [...run.nodes.values()].flatMap((nodeState) => dispatchedAtOf(nodeState) ?? []);
+  return starts.length > 0 ? Math.min(...starts) : undefined;
+}
+function nodeReports(run, nodes = [...run.nodes.values()].map((nodeState) => nodeState.node)) {
+  return nodes.flatMap((node) => {
+    const nodeState = run.nodes.get(node.name);
+    if (!nodeState || !isSettled(nodeState))
+      return [];
+    const previous = run.lastRunDurations?.[node.name];
+    const start = dispatchedAtOf(nodeState);
+    return [
+      {
+        ...node,
+        status: nodeState.status,
+        ...start !== undefined && { start, duration: Math.max(1, nodeState.endedAt - start) },
+        ...previous !== undefined && { previous },
+        ..."error" in nodeState && { error: nodeState.error },
+        ..."outputs" in nodeState && { outputs: nodeState.outputs }
+      }
+    ];
+  });
+}
+var isFailed = (nodeState) => nodeState?.status === "fail" || nodeState?.status === "dep-failed";
+var failedDepsOf = (run, nodeState) => nodeState.node.deps.filter((dep) => isFailed(run.nodes.get(dep)));
+var isConsequence = (run, nodeState) => nodeState.status === "dep-failed" || nodeState.status === "fail" && !nodeState.command && failedDepsOf(run, nodeState).length > 0;
+var isOwnFailure = (run, nodeState) => nodeState.status === "fail" && !isConsequence(run, nodeState);
+var ownFailures = (run) => [...run.nodes.values()].filter((nodeState) => isOwnFailure(run, nodeState));
+function causesOf(run, nodeState) {
+  const causes = new Set;
+  const seen = new Set;
+  const visit = (name) => {
+    if (seen.has(name))
+      return;
+    seen.add(name);
+    const dep = run.nodes.get(name);
+    if (isConsequence(run, dep))
+      failedDepsOf(run, dep).forEach(visit);
+    else
+      causes.add(name);
+  };
+  failedDepsOf(run, nodeState).forEach(visit);
+  return [...causes];
+}
+function consequencesOf(run, ownFailureName) {
+  const consequences = [...run.nodes.values()].filter((nodeState) => isConsequence(run, nodeState) && causesOf(run, nodeState).includes(ownFailureName));
+  const namesWithStatus = (status) => consequences.filter((nodeState) => nodeState.status === status).map((nodeState) => nodeState.node.name);
+  return { failed: namesWithStatus("fail"), skipped: namesWithStatus("dep-failed") };
+}
+
+// packages/dagactions/src/step-records.ts
+var logPath = (outputDir) => outputDir.replace(/\/([^/]+)\/out$/, ".logs/$1.log");
+function commandOf(e) {
+  const cause = e instanceof Error ? e.cause : undefined;
+  return Array.isArray(cause?.argv) && typeof cause.cwd === "string" && typeof cause.code === "number" ? cause : undefined;
+}
+
+// packages/dagactions/src/kernel/run-slice.ts
+var initialRunState = { nodes: new Map, lifecycle: { status: "running" } };
+var initialNodeState = (node) => ({
+  node,
+  status: "pending",
+  unfinishedLine: "",
+  lastLine: "",
+  printed: false
+});
+var isTimeout = (error) => error instanceof Error && error.name === "TimeoutError";
+function failureMessage(node, error) {
+  if (!isTimeout(error) || node.timeoutMs === undefined)
+    return errorMessage(error);
+  const minutes = node.timeoutMs / 60000;
+  const after = minutes >= 1 ? `${+minutes.toFixed(2)} minute${minutes === 1 ? "" : "s"}` : formatDuration(node.timeoutMs);
+  return `The action '${node.name}' has timed out after ${after}.`;
+}
+function redrawnLine(line, chunk) {
+  const text = chunk.replace(/\r+$/, "");
+  if (text.includes("\r"))
+    return textAfterLastReturn(chunk);
+  return text && line.endsWith("\r") ? chunk : line + chunk;
+}
+function unfinishedLineAfter(unfinishedLine, chunk) {
+  const end = chunk.lastIndexOf(`
+`);
+  return end < 0 ? redrawnLine(unfinishedLine, chunk) : textAfterLastReturn(chunk.slice(end + 1));
+}
+function completedLines(unfinishedLine, chunk) {
+  const end = chunk.lastIndexOf(`
+`);
+  if (end < 0)
+    return [];
+  return (unfinishedLine + chunk.slice(0, end)).split(`
+`).map((line) => plainLine(line)).filter((line) => !isDebugCommand(line));
+}
+function linesAfter(state, chunk) {
+  const ended = completedLines(state.unfinishedLine, chunk);
+  return {
+    unfinishedLine: unfinishedLineAfter(state.unfinishedLine, chunk),
+    lastLine: ended.findLast((line) => line.trim()) ?? state.lastLine,
+    printed: state.printed || ended.length > 0
+  };
+}
+function nodeReducer(state, action) {
+  switch (action.type) {
+    case "outputPrinted":
+      return { ...state, ...linesAfter(state, action.chunk) };
+    case "logRead":
+      if (!isSettled(state))
+        return state;
+      if (state.status === "fail")
+        return { ...state, lineCount: action.log.length, log: action.log };
+      return { ...state, lineCount: action.log.length };
+  }
+  const { occurredAt } = action;
+  const lines = {
+    node: action.node,
+    unfinishedLine: state.unfinishedLine,
+    lastLine: state.lastLine,
+    printed: state.printed
+  };
+  if (action.type === "dispatch")
+    return { ...lines, status: "dispatched", dispatchedAt: occurredAt };
+  if (action.type === "start")
+    return { ...lines, status: "running", dispatchedAt: dispatchedAtOf(state) ?? occurredAt };
+  const ended = {
+    ...lines,
+    ...state.unfinishedLine && linesAfter(state, `
+`),
+    unfinishedLine: "",
+    endedAt: occurredAt
+  };
+  switch (action.type) {
+    case "done":
+    case "cached":
+      return {
+        ...ended,
+        status: action.type,
+        dispatchedAt: dispatchedAtOf(state) ?? occurredAt,
+        actionKey: action.actionKey,
+        outputs: action.outputs
+      };
+    case "fail": {
+      const command = commandOf(action.error);
+      return {
+        ...ended,
+        status: "fail",
+        dispatchedAt: dispatchedAtOf(state) ?? occurredAt,
+        actionKey: action.actionKey,
+        error: failureMessage(action.node, action.error),
+        timedOut: isTimeout(action.error),
+        ...command && { command }
+      };
+    }
+    case "dep-failed":
+      return { ...ended, status: "dep-failed", error: errorMessage(action.error) };
+    case "cancelled": {
+      const dispatchedAt = dispatchedAtOf(state);
+      return {
+        ...ended,
+        status: "cancelled",
+        actionKey: action.actionKey,
+        ...dispatchedAt !== undefined && { dispatchedAt }
+      };
+    }
+  }
+}
+var withNode = (state, nodeState) => ({
+  ...state,
+  nodes: new Map(state.nodes).set(nodeState.node.name, nodeState)
+});
+var withLifecycle = (state, lifecycle) => state.lifecycle.status === "running" || state.lifecycle.status === "cancelling" ? { ...state, lifecycle } : state;
+function runReducer(state, action) {
+  switch (action.type) {
+    case "passBegun": {
+      const nodes = new Map(state.nodes);
+      for (const node of action.pass.nodes)
+        nodes.set(node.name, initialNodeState(node));
+      return { ...state, nodes };
+    }
+    case "runCancelled":
+      return state.lifecycle.status === "running" ? { ...state, lifecycle: { status: "cancelling" } } : state;
+    case "runClosed":
+      return withLifecycle(state, {
+        status: state.lifecycle.status === "cancelling" ? "cancelled" : "finished"
+      });
+    case "runErrored":
+      return withLifecycle(state, { status: "errored", error: action.error });
+    case "runInterrupted":
+      return withLifecycle(state, { status: "interrupted" });
+    case "lastRunRead":
+      return { ...state, lastRunDurations: action.durations };
+    case "logRead": {
+      const current = state.nodes.get(action.settled.node.name);
+      return current === action.settled ? withNode(state, nodeReducer(current, action)) : state;
+    }
+    default: {
+      const current = state.nodes.get(action.node.name) ?? initialNodeState(action.node);
+      return withNode(state, nodeReducer(current, action));
+    }
+  }
+}
+
+// packages/dagactions/src/kernel/store.ts
+function createRunStore(opts) {
+  const { fs, casBaseDir, listeners } = opts;
+  let state = initialRunState;
+  const durations = {};
+  let passCount = 0;
+  let listenerQueue = Promise.resolve();
+  const queueInOrder = (work) => listenerQueue = listenerQueue.then(work);
+  const runImmediately = (hook) => {
+    try {
+      hook();
+    } catch (e) {
+      queueInOrder(() => Promise.reject(e));
+    }
+  };
+  const tearDownListeners = (hook) => {
+    const errors = listeners.toReversed().flatMap((listener) => {
+      try {
+        hook(listener);
+        return [];
+      } catch (e) {
+        return [e];
+      }
+    });
+    if (errors.length > 0)
+      throw errors[0];
+  };
+  const casLogLines = async (actionKey) => {
+    const path = actionKey && logPath(outputDirFor(casBaseDir, actionKey));
+    if (!path || !await fs.exists(path))
+      return [];
+    return logLines(await fs.readText(path)).filter((line) => !isDebugCommand(line));
+  };
+  const lastRunPath = `${casBaseDir}/${LAST_RUN_FILE}`;
+  let lastRunRead;
+  const readLastRun = () => lastRunRead ??= (async () => {
+    if (!await fs.exists(lastRunPath))
+      return;
+    try {
+      const { durations } = JSON.parse(await fs.readText(lastRunPath));
+      dispatch({ type: "lastRunRead", durations });
+    } catch {}
+  })();
+  const writeLastRun = async () => {
+    await readLastRun();
+    await fs.ensureDir(casBaseDir);
+    const last = { durations: { ...state.lastRunDurations, ...durations } };
+    await fs.writeText(lastRunPath, JSON.stringify(last, null, 2));
+  };
+  const announceCompletedLines = (nodeState, lines) => {
+    if (lines.length > 0)
+      for (const listener of listeners)
+        runImmediately(() => listener.immediate?.output?.(nodeState, lines));
+  };
+  const settleNode = async (nodeState) => {
+    const log = await casLogLines(actionKeyOf(nodeState));
+    const duration = durationOf(nodeState);
+    if ((nodeState.status === "done" || nodeState.status === "fail") && duration !== undefined) {
+      durations[nodeState.node.name] = duration;
+      await writeLastRun();
+    }
+    const logRead = { type: "logRead", settled: nodeState, log };
+    dispatch(logRead);
+    const settled = nodeReducer(nodeState, logRead);
+    for (const listener of listeners)
+      listener.settle?.(settled, state, log);
+  };
+  const dispatch = (action) => {
+    const previous = state;
+    state = runReducer(state, action);
+    switch (action.type) {
+      case "passBegun": {
+        const isFirstPass = passCount++ === 0;
+        queueInOrder(() => listeners.forEach((listener) => listener.begin?.(action.pass, state, isFirstPass)));
+        if (opts.lastRunAtBegin)
+          queueInOrder(readLastRun);
+        return;
+      }
+      case "outputPrinted": {
+        const unfinishedLine = previous.nodes.get(action.node.name)?.unfinishedLine ?? "";
+        const nodeState = state.nodes.get(action.node.name);
+        announceCompletedLines(nodeState, completedLines(unfinishedLine, action.chunk));
+        return;
+      }
+      case "runCancelled":
+      case "runClosed":
+      case "runErrored":
+      case "runInterrupted":
+      case "lastRunRead":
+      case "logRead":
+        return;
+    }
+    const nodeState = state.nodes.get(action.node.name);
+    if (nodeState.status === "running") {
+      for (const listener of listeners)
+        runImmediately(() => listener.immediate?.start?.(nodeState));
+      queueInOrder(() => listeners.forEach((listener) => listener.start?.(nodeState, state)));
+    } else if (isSettled(nodeState)) {
+      const unfinishedLine = previous.nodes.get(action.node.name)?.unfinishedLine;
+      if (unfinishedLine)
+        announceCompletedLines(nodeState, completedLines(unfinishedLine, `
+`));
+      queueInOrder(() => settleNode(nodeState));
+    }
+  };
+  return {
+    dispatch,
+    getState: () => state,
+    begin: (pass) => dispatch({ type: "passBegun", pass }),
+    cancel: () => dispatch({ type: "runCancelled" }),
+    onEvent: (event) => {
+      if (event.type !== "settled")
+        dispatch({ ...event, occurredAt: opts.clock.now() });
+    },
+    onOutput: (node, chunk) => dispatch({ type: "outputPrinted", node, chunk }),
+    report: async (pass) => {
+      await listenerQueue;
+      await readLastRun();
+      if (Object.keys(durations).length > 0)
+        await writeLastRun();
+      return nodeReports(state, pass.nodes);
+    },
+    log: async (name) => {
+      const nodeState = state.nodes.get(name);
+      return nodeState ? groupLines(nodeState, (nodeState.status === "fail" ? nodeState.log : undefined) ?? await casLogLines(actionKeyOf(nodeState))) : [];
+    },
+    finish: (pass, reports) => queueInOrder(async () => {
+      for (const listener of listeners)
+        await listener.finish?.(pass, reports);
+    }),
+    close: async (error) => {
+      await listenerQueue.catch(() => {});
+      dispatch(error === undefined ? { type: "runClosed" } : { type: "runErrored", error: errorMessage(error) });
+      tearDownListeners((listener) => listener.close?.(state));
+    },
+    interrupt: () => {
+      dispatch({ type: "runInterrupted" });
+      tearDownListeners((listener) => listener.interrupt?.(state));
+    }
+  };
+}
+
+// packages/dagactions/src/github/renderer.ts
+var CHECK_RUN_CONCLUSION_BY_STATUS = {
+  done: "success",
+  cached: "success",
+  fail: "failure",
+  "dep-failed": "skipped",
+  cancelled: "cancelled"
+};
+var isoTimestamp = (epochMs) => new Date(epochMs).toISOString();
+var durationText = (nodeState) => formatDuration(durationOf(nodeState));
+function checkRunSummary(nodeState) {
+  switch (nodeState.status) {
+    case "done":
+      return `done in ${durationText(nodeState)}`;
+    case "cached":
+    case "cancelled":
+      return nodeState.status;
+    case "fail":
+    case "dep-failed":
+      return nodeState.error;
+  }
+}
+function recapLines(title, nodes, rerunCommand) {
+  const rootFailureNames = rootFailures(nodes);
+  const namesLine = (label, status) => {
+    const names = namesOf(nodes, status);
+    return names.length > 0 ? [`${label}: ${names.join(", ")}`] : [];
+  };
+  return [
+    `${reportHeadline(nodes)} · ${title} · ${countsLine(nodes, String)} · wall ${formatDuration(wallTimeOf(nodes))}`,
+    ...namesLine("failed", "fail"),
+    ...namesLine("skipped, dependency failed", "dep-failed"),
+    ...namesLine("cancelled", "cancelled"),
+    ...rerunCommand && rootFailureNames.length > 0 ? [`reproduce: ${rerunCommand} --only ${rootFailureNames.join(",")}`] : []
+  ];
+}
+function createGithubRenderer(ci) {
+  let checkRunQueue = Promise.resolve();
+  const queueCheckRunUpdate = (update) => {
+    checkRunQueue = checkRunQueue.then(() => ci.check(update));
+  };
+  const drawSettledNode = (nodeState, log) => {
+    const name = nodeState.node.name;
+    switch (nodeState.status) {
+      case "done":
+        ci.group(`${STATUS_ICON.done} ${name} (${durationText(nodeState)})`, log);
+        break;
+      case "cached":
+        ci.group(`${STATUS_ICON.cached} ${name} (cached)`, log);
+        break;
+      case "fail":
+        ci.group(`${STATUS_ICON.fail} ${name} (${durationText(nodeState)})`, groupLines(nodeState, log));
+        ci.annotate("error", name, nodeState.error);
+        break;
+      case "dep-failed":
+        ci.info(`${STATUS_ICON["dep-failed"]} ${name}: skipped, ${nodeState.error}`);
+        break;
+      case "cancelled":
+        if (nodeState.actionKey)
+          ci.group(`${STATUS_ICON.cancelled} ${name} (cancelled)`, log);
+        else
+          ci.info(`${STATUS_ICON.cancelled} ${name}: cancelled`);
+    }
+  };
+  return {
+    begin: ({ banner }) => {
+      if (banner)
+        ci.group(banner.title, banner.lines);
+    },
+    immediate: {
+      start: (nodeState) => queueCheckRunUpdate({
+        name: nodeState.node.name,
+        status: "in_progress",
+        startedAt: isoTimestamp(nodeState.dispatchedAt)
+      })
+    },
+    start: ({ node }, run) => {
+      const lastRunDuration = run.lastRunDurations?.[node.name];
+      ci.info(`▷ ${node.name}${lastRunDuration ? ` (last run ${formatDuration(lastRunDuration)})` : ""}`);
+    },
+    settle: (nodeState, _run, log) => {
+      drawSettledNode(nodeState, log);
+      const dispatchedAt = dispatchedAtOf(nodeState);
+      queueCheckRunUpdate({
+        name: nodeState.node.name,
+        status: "completed",
+        conclusion: nodeState.status === "fail" && nodeState.timedOut ? "timed_out" : CHECK_RUN_CONCLUSION_BY_STATUS[nodeState.status],
+        ...dispatchedAt !== undefined && { startedAt: isoTimestamp(dispatchedAt) },
+        completedAt: isoTimestamp(nodeState.endedAt),
+        summary: checkRunSummary(nodeState)
+      });
+    },
+    finish: async (pass, nodes) => {
+      for (const line of ["", ...recapLines(pass.title, nodes, pass.rerunCommand)])
+        ci.info(line);
+      await checkRunQueue;
+    }
+  };
+}
+var createGithubStore = (ports, casBaseDir) => createRunStore({
+  fs: ports.fs,
+  clock: ports.clock,
+  casBaseDir,
+  listeners: [createGithubRenderer(ports.ci)]
+});
+
 // packages/dagactions/src/journal.ts
+import { dirname } from "node:path";
 function createJournal(fs, path, initial = {}) {
   const entries = { ...initial };
   let chain = Promise.resolve();
   const write = () => {
     chain = chain.then(async () => {
-      const dir = path.slice(0, path.lastIndexOf("/"));
-      if (dir)
-        await fs.ensureDir(dir);
+      await fs.ensureDir(dirname(path));
       await fs.writeText(path, JSON.stringify(entries, null, 2));
     });
     return chain;
@@ -59522,6 +59981,250 @@ function createJournal(fs, path, initial = {}) {
 }
 async function readJournal(fs, path) {
   return await fs.exists(path) ? JSON.parse(await fs.readText(path)) : {};
+}
+
+// packages/dagactions/src/summary.ts
+var DEFAULT_SUMMARY_RENDERERS = [
+  renderStatus,
+  renderTimeline,
+  renderCriticalPath,
+  renderDag,
+  renderFailures
+];
+var MERMAID_CLASS = {
+  done: "done",
+  cached: "cached",
+  fail: "fail",
+  "dep-failed": "skipped",
+  cancelled: "skipped"
+};
+var MERMAID_CLASSDEFS = [
+  "classDef done fill:#dcfce7,stroke:#16a34a,color:#14532d",
+  "classDef cached fill:#f1f5f9,stroke:#94a3b8,color:#475569",
+  "classDef fail fill:#fee2e2,stroke:#dc2626,color:#7f1d1d",
+  "classDef skipped fill:#f8fafc,stroke:#cbd5e1,stroke-dasharray:4 4,color:#94a3b8"
+];
+var LOG_BLOCK = /```text\n[\s\S]*?```/g;
+function formatDelta(now, before) {
+  const pct = Math.round((now - before) / before * 100);
+  return pct === 0 ? "±0%" : pct > 0 ? `+${pct}%` : `${pct}%`;
+}
+var byName = (nodes) => [...nodes].sort((a, b) => a.name.localeCompare(b.name));
+var ran = (n) => n.status === "done" || n.status === "fail";
+var sum = (ns) => ns.reduce((s, n) => s + n, 0);
+function dagMermaid(all, statusOf) {
+  const names = new Set(all.map((n) => n.name));
+  const nodes = all.map((n) => ({ ...n, deps: n.deps.filter((d) => names.has(d)) }));
+  if (nodes.length > MAX_GRAPH_NODES) {
+    const kinds = [...new Set(nodes.map((n) => n.kind))];
+    const id = (kind) => `k${kinds.indexOf(kind)}`;
+    const out = ["```mermaid", "flowchart LR"];
+    for (const kind of kinds) {
+      const members = nodes.filter((n) => n.kind === kind);
+      const counts = ["done", "cached", "fail", "dep-failed", "cancelled"].map((s) => [s, members.filter((n) => statusOf(n.name) === s).length]).filter(([, c]) => c > 0).map(([s, c]) => `${STATUS_ICON[s]}${c}`).join(" ");
+      out.push(`  ${id(kind)}[${mermaidQuote(`${kind} ×${members.length}: ${counts}`)}]`);
+    }
+    const byNodeName = new Map(nodes.map((n) => [n.name, n]));
+    const edges = new Set;
+    for (const n of nodes) {
+      for (const d of n.deps) {
+        const from = id(byNodeName.get(d).kind);
+        const to = id(n.kind);
+        if (from !== to)
+          edges.add(`  ${from} --> ${to}`);
+      }
+    }
+    out.push(...edges, "```");
+    return out;
+  }
+  const { lines: body } = mermaidBody(nodes, {
+    label: (n, scope) => {
+      const status = statusOf(n.name);
+      return `${status ? STATUS_ICON[status] : "·"} ${scope ? n.name.slice(scope.length + 1) : n.name}`;
+    },
+    classOf: (n) => {
+      const status = statusOf(n.name);
+      return status && MERMAID_CLASS[status];
+    }
+  });
+  return ["```mermaid", "flowchart LR", ...body, ...MERMAID_CLASSDEFS.map((c) => `  ${c}`), "```"];
+}
+function longestChain(nodes) {
+  const counted = new Set(nodes.filter((n) => (n.duration ?? 0) >= CRITICAL_PATH_FLOOR_MS).map((n) => n.name));
+  const total = new Map;
+  const via = new Map;
+  for (const n of nodes) {
+    if (n.duration === undefined)
+      continue;
+    const own = counted.has(n.name) ? n.duration : 0;
+    let best = 0;
+    let bestDep;
+    for (const d of n.deps) {
+      const t = total.get(d) ?? 0;
+      if (t > best) {
+        best = t;
+        bestDep = d;
+      }
+    }
+    total.set(n.name, own + best);
+    via.set(n.name, bestDep);
+  }
+  let end;
+  for (const [name, t] of total)
+    if (end === undefined || t > total.get(end))
+      end = name;
+  if (end === undefined || total.get(end) === 0)
+    return null;
+  const names = [];
+  for (let cur = end;cur !== undefined; cur = via.get(cur))
+    names.unshift(cur);
+  return { names: names.filter((name) => counted.has(name)), total: total.get(end) };
+}
+function renderStatus({ nodes }) {
+  const wall = wallTimeOf(nodes);
+  const busy = sum(nodes.filter(ran).map((n) => n.duration ?? 0));
+  const saved = sum(nodes.filter((n) => n.status === "cached").map((n) => n.previous ?? 0));
+  const hits = namesOf(nodes, "cached").length;
+  const lookups = hits + namesOf(nodes, "done").length;
+  return [
+    `### ${reportHeadline(nodes)}`,
+    "",
+    [
+      countsLine(nodes, (n) => `**${n}**`),
+      `wall ${formatDuration(wall)}`,
+      ...wall > 0 ? [`parallelism ${(busy / wall).toFixed(1)}×`] : [],
+      ...lookups > 0 ? [`cache ${hits}/${lookups} hits${saved > 0 ? `, ${formatDuration(saved)} saved` : ""}`] : []
+    ].join(" · ")
+  ];
+}
+function renderTimeline({ nodes }) {
+  const bars = byName(nodes).filter(ran).flatMap((n) => n.start === undefined ? [] : `  ${n.name.replace(/:/g, "/")} :${n.status === "fail" ? "crit" : "done"}, ${n.start}, ${n.start + (n.duration ?? 0)}`);
+  if (bars.length === 0)
+    return [];
+  return [
+    "```mermaid",
+    "gantt",
+    "  title node timeline",
+    "  dateFormat x",
+    "  axisFormat %M:%S",
+    "  section nodes",
+    ...bars,
+    "```"
+  ];
+}
+function renderCriticalPath({ nodes }) {
+  const cp = longestChain(nodes);
+  return cp ? [`critical path: ${cp.names.join(" → ")} (${formatDuration(cp.total)})`] : [];
+}
+function renderDag({ nodes }) {
+  const status = new Map(nodes.map((n) => [n.name, n.status]));
+  return nodes.length > 0 ? dagMermaid(nodes, (name) => status.get(name)) : [];
+}
+async function renderFailures({ nodes, log }) {
+  const lines = [];
+  for (const n of nodes) {
+    if (n.status === "dep-failed")
+      lines.push(`- ${STATUS_ICON["dep-failed"]} ${n.name}: skipped, dependency failed`);
+    if (n.status === "cancelled")
+      lines.push(`- ${STATUS_ICON.cancelled} ${n.name}: cancelled`);
+    if (n.status !== "fail")
+      continue;
+    const dur = n.duration !== undefined ? ` (${formatDuration(n.duration)})` : "";
+    lines.push(`<details><summary>${STATUS_ICON.fail} ${n.name}${dur}</summary>`, "", "```text", ...(await log(n.name)).slice(-FAILURES_REPORT_LOG_LINES), "```", "", "</details>", "");
+  }
+  if (lines.at(-1) === "")
+    lines.pop();
+  return lines.length > 0 ? ["### failures", "", ...lines] : [];
+}
+function renderTable({ nodes }) {
+  return [
+    "| node | status | duration | vs last |",
+    "| --- | --- | --- | --- |",
+    ...byName(nodes).map((n) => {
+      const d = n.duration;
+      const delta = n.status === "done" && d !== undefined && n.previous ? formatDelta(d, n.previous) : "";
+      return `| ${n.name} | ${n.status} | ${d !== undefined ? formatDuration(d) : ""} | ${delta} |`;
+    })
+  ];
+}
+async function renderSummary(title, report, renderers, warn, budget = SUMMARY_BUDGET_BYTES) {
+  const parts = [];
+  for (const [i, render] of renderers.entries()) {
+    const name = render.name || `#${i + 1}`;
+    try {
+      const lines = await render(report);
+      if (lines.length > 0)
+        parts.push([name, lines.join(`
+`)]);
+    } catch (e) {
+      const message = `${name} failed: ${errorMessage(e)}`;
+      warn(message);
+      parts.push([name, `_(${message})_`]);
+    }
+  }
+  if (parts.length === 0)
+    return "";
+  const all = [["heading", `## ${title}`], ...parts];
+  const size = (text) => Buffer.byteLength(text) + 2;
+  let texts = all.map(([, text]) => text);
+  if (sum(texts.map(size)) > budget) {
+    let left = budget;
+    texts = all.map(([name, text]) => {
+      const trimmed = text.replace(LOG_BLOCK, "_(log omitted: summary over the 1 MiB budget)_");
+      if (size(trimmed) > left)
+        return `_(${name} omitted: summary over the 1 MiB budget)_`;
+      left -= size(trimmed);
+      return trimmed;
+    });
+  }
+  return texts.join(`
+
+`) + `
+`;
+}
+
+// packages/dagactions/src/reporter.ts
+async function finishPass(ports, store, pass, results, renderers = DEFAULT_SUMMARY_RENDERERS) {
+  const nodes = await store.report(pass);
+  const markdown = await renderSummary(pass.title, { nodes, log: store.log }, renderers, (message) => ports.ci.annotate("warning", "dagactions summary", message));
+  await ports.ci.summary(markdown);
+  await store.finish(pass, nodes);
+  const failed = results.filter((r) => r.status !== "done" && r.status !== "cached").length;
+  return { failed, markdown };
+}
+function createReporter(ports, opts) {
+  const pass = {
+    title: opts.title ?? titleOf(undefined),
+    nodes: opts.nodes,
+    ...opts.rerunCommand && { rerunCommand: opts.rerunCommand }
+  };
+  const store = createGithubStore(ports, opts.casBaseDir);
+  store.begin(pass);
+  return {
+    onEvent: store.onEvent,
+    finish: (results) => finishPass(ports, store, pass, results, opts.summary)
+  };
+}
+
+// packages/dagactions/src/select.ts
+function selectNodes(graph, names) {
+  const nodes = graph.getNodes();
+  const keep = new Set;
+  const visit = (name) => {
+    if (keep.has(name))
+      return;
+    const node = nodes.get(name);
+    if (!node)
+      throw new Error(`unknown node "${name}"`);
+    keep.add(name);
+    node.deps.forEach(visit);
+  };
+  names.forEach(visit);
+  const out = new Graph;
+  for (const name of validateNoCycles(nodes))
+    if (keep.has(name))
+      out.add(nodes.get(name));
+  return out;
 }
 
 // packages/dagactions/src/define-step.ts
@@ -61695,7 +62398,7 @@ import * as path10 from "path";
 import * as path6 from "path";
 import assert from "assert";
 var IS_WINDOWS3 = process.platform === "win32";
-function dirname4(p) {
+function dirname5(p) {
   p = safeTrimTrailingSeparator(p);
   if (IS_WINDOWS3 && /^\\\\[^\\]+(\\[^\\]+)?$/.test(p)) {
     return p;
@@ -61808,14 +62511,14 @@ function getSearchPaths(patterns) {
     }
     let foundAncestor = false;
     let tempKey = key;
-    let parent = dirname4(tempKey);
+    let parent = dirname5(tempKey);
     while (parent !== tempKey) {
       if (searchPathMap[parent]) {
         foundAncestor = true;
         break;
       }
       tempKey = parent;
-      parent = dirname4(tempKey);
+      parent = dirname5(tempKey);
     }
     if (!foundAncestor) {
       result.push(pattern.searchPath);
@@ -61844,7 +62547,7 @@ import * as os6 from "os";
 import * as path9 from "path";
 import assert3 from "assert";
 
-// node_modules/.bun/balanced-match@4.0.4/node_modules/balanced-match/dist/esm/index.js
+// node_modules/.bun/balanced-match@4.0.3/node_modules/balanced-match/dist/esm/index.js
 var balanced = (a, b, str) => {
   const ma = a instanceof RegExp ? maybeMatch(a, str) : a;
   const mb = b instanceof RegExp ? maybeMatch(b, str) : b;
@@ -63608,12 +64311,12 @@ class Path {
         this.segments = itemPath.split(path8.sep);
       } else {
         let remaining = itemPath;
-        let dir = dirname4(remaining);
+        let dir = dirname5(remaining);
         while (dir !== remaining) {
           const basename = path8.basename(remaining);
           this.segments.unshift(basename);
           remaining = dir;
-          dir = dirname4(remaining);
+          dir = dirname5(remaining);
         }
         this.segments.unshift(remaining);
       }
@@ -63625,7 +64328,7 @@ class Path {
         segment = normalizeSeparators2(itemPath[i]);
         if (i === 0 && hasRoot(segment)) {
           segment = safeTrimTrailingSeparator(segment);
-          assert2(segment === dirname4(segment), `Parameter 'itemPath' root segment contains information for multiple segments`);
+          assert2(segment === dirname5(segment), `Parameter 'itemPath' root segment contains information for multiple segments`);
           this.segments.push(segment);
         } else {
           assert2(!segment.includes(path8.sep), `Parameter 'itemPath' contains unexpected path separators`);
@@ -63708,7 +64411,7 @@ class Pattern {
   }
   partialMatch(itemPath) {
     itemPath = safeTrimTrailingSeparator(itemPath);
-    if (dirname4(itemPath) === itemPath) {
+    if (dirname5(itemPath) === itemPath) {
       return this.rootRegExp.test(itemPath);
     }
     return this.minimatch.matchOne(itemPath.split(IS_WINDOWS6 ? /\\+/ : /\/+/), this.minimatch.set[0], true);
@@ -64208,7 +64911,6 @@ function hashFiles3(patterns) {
 }
 
 // packages/dagactions/src/steps.ts
-var logPath = (outputDir) => outputDir.replace(/\/([^/]+)\/out$/, ".logs/$1.log");
 function outputRefRoles(name, args, deps) {
   const roleOf = Object.fromEntries(Object.entries(deps).flatMap(([role, ref]) => ref ? [[ref.name, role]] : []));
   for (const arg of args)
@@ -64258,18 +64960,22 @@ function run(graph, ports, opts) {
       const r = await p.sh.run(argv, {
         ...opts.cwd && { cwd: opts.cwd },
         env: { ...Object.fromEntries([...withheld, ...env]), DAGACTIONS_OUT: outputDir },
-        ...ctx?.signal && { signal: ctx.signal }
+        ...ctx?.signal && { signal: ctx.signal },
+        ...ctx?.output && { onOutput: ctx.output }
       });
       await p.fs.writeText(logPath(outputDir), r.output);
       const result = `${outputDir}/result.json`;
       await p.fs.writeText(result, JSON.stringify({ cmd: opts.cmd, cwd: opts.cwd ?? "", code: r.code }, null, 2));
+      const cause = { argv, cwd: opts.cwd ?? ".", code: r.code };
       if (!r.ok)
-        throw new Error(`${argv.join(" ")} exited ${r.code}`);
+        throw new Error(`${argv.join(" ")} exited ${r.code}`, { cause });
+      if (ctx?.signal?.aborted)
+        throw new Error(`${argv.join(" ")} was stopped`, { cause });
       const outputs = { result };
       for (const [role, file] of Object.entries(declared)) {
         const path = `${outputDir}/${file}`;
         if (!await p.fs.exists(path))
-          throw new Error(`declared output ${role} missing: ${file}`);
+          throw new Error(`declared output ${role} missing: ${file}`, { cause });
         outputs[role] = path;
       }
       return outputs;
@@ -64446,514 +65152,54 @@ function uploadArtifact(graph, ports, spec) {
   return step.addNode(graph, ports, { kind: spec.name, ...spec.deps && { deps: spec.deps } });
 }
 
-// packages/dagactions/src/summary.ts
-var DEFAULT_SUMMARY_RENDERERS = [
-  renderStatus,
-  renderTimeline,
-  renderCriticalPath,
-  renderDag,
-  renderFailures
-];
-var MERMAID_CLASS = {
-  done: "done",
-  cached: "cached",
-  fail: "fail",
-  "dep-failed": "skipped",
-  cancelled: "skipped"
-};
-var MERMAID_CLASSDEFS = [
-  "classDef done fill:#dcfce7,stroke:#16a34a,color:#14532d",
-  "classDef cached fill:#f1f5f9,stroke:#94a3b8,color:#475569",
-  "classDef fail fill:#fee2e2,stroke:#dc2626,color:#7f1d1d",
-  "classDef skipped fill:#f8fafc,stroke:#cbd5e1,stroke-dasharray:4 4,color:#94a3b8"
-];
-var LOG_BLOCK = /```text\n[\s\S]*?```/g;
-function formatDuration(ms) {
-  return ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`;
-}
-function formatDelta(now, before) {
-  const pct = Math.round((now - before) / before * 100);
-  return pct === 0 ? "±0%" : pct > 0 ? `+${pct}%` : `${pct}%`;
-}
-var byName = (nodes) => [...nodes].sort((a, b) => a.name.localeCompare(b.name));
-var ran = (n) => n.status === "done" || n.status === "fail";
-var sum = (ns) => ns.reduce((s, n) => s + n, 0);
-var namesOf = (nodes, status) => nodes.filter((n) => n.status === status).map((n) => n.name);
-var plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
-function rootFailures(nodes) {
-  const failed = new Set(nodes.filter((n) => n.status === "fail" || n.status === "dep-failed").map((n) => n.name));
-  return nodes.filter((n) => n.status === "fail" && !n.deps.some((d) => failed.has(d))).map((n) => n.name);
-}
-function outcome(nodes) {
-  const roots = rootFailures(nodes);
-  const skipped = namesOf(nodes, "dep-failed").length;
-  const cancelled = namesOf(nodes, "cancelled").length;
-  if (roots.length > 3)
-    return `${STATUS_ICON.fail} ${roots.slice(0, 3).join(", ")} and ${roots.length - 3} more failed`;
-  if (roots.length > 0)
-    return `${STATUS_ICON.fail} ${roots.join(", ")} failed`;
-  if (skipped > 0)
-    return `${STATUS_ICON["dep-failed"]} ${plural(skipped, "node")} skipped, a dependency failed`;
-  if (cancelled > 0)
-    return `${STATUS_ICON.cancelled} cancelled, ${plural(cancelled, "node")} not run`;
-  return `${STATUS_ICON.done} ${nodes.length === 1 ? "1 node" : `all ${nodes.length} nodes`} succeeded`;
-}
-function counts(nodes, mark) {
-  const count = (s) => namesOf(nodes, s).length;
-  return `built ${mark(count("done"))} · cached ${mark(count("cached"))} · failed ${mark(count("fail"))} · skipped ${mark(count("dep-failed"))}${count("cancelled") > 0 ? ` · cancelled ${mark(count("cancelled"))}` : ""}`;
-}
-function wallOf(nodes) {
-  const starts = nodes.flatMap((n) => n.start ?? []);
-  const ends = nodes.flatMap((n) => n.start === undefined ? [] : n.start + (n.duration ?? 0));
-  return starts.length > 0 ? Math.max(...ends) - Math.min(...starts) : 0;
-}
-function footer(title, nodes, rerun) {
-  const roots = rootFailures(nodes);
-  const listed = (label, status) => {
-    const names = namesOf(nodes, status);
-    return names.length > 0 ? [`${label}: ${names.join(", ")}`] : [];
-  };
-  return [
-    `${title} · ${outcome(nodes)} · ${counts(nodes, String)} · wall ${formatDuration(wallOf(nodes))}`,
-    ...listed("failed", "fail"),
-    ...listed("skipped, dependency failed", "dep-failed"),
-    ...listed("cancelled", "cancelled"),
-    ...rerun && roots.length > 0 ? [`reproduce: ${rerun} --only ${roots.join(",")}`] : []
-  ];
-}
-function dagMermaid(all, statusOf) {
-  const names = new Set(all.map((n) => n.name));
-  const nodes = all.map((n) => ({ ...n, deps: n.deps.filter((d) => names.has(d)) }));
-  if (nodes.length > MAX_GRAPH_NODES) {
-    const kinds = [...new Set(nodes.map((n) => n.kind))];
-    const id = (kind) => `k${kinds.indexOf(kind)}`;
-    const out = ["```mermaid", "flowchart LR"];
-    for (const kind of kinds) {
-      const members = nodes.filter((n) => n.kind === kind);
-      const counts = ["done", "cached", "fail", "dep-failed", "cancelled"].map((s) => [s, members.filter((n) => statusOf(n.name) === s).length]).filter(([, c]) => c > 0).map(([s, c]) => `${STATUS_ICON[s]}${c}`).join(" ");
-      out.push(`  ${id(kind)}[${mermaidQuote(`${kind} ×${members.length}: ${counts}`)}]`);
-    }
-    const byNodeName = new Map(nodes.map((n) => [n.name, n]));
-    const edges = new Set;
-    for (const n of nodes) {
-      for (const d of n.deps) {
-        const from = id(byNodeName.get(d).kind);
-        const to = id(n.kind);
-        if (from !== to)
-          edges.add(`  ${from} --> ${to}`);
-      }
-    }
-    out.push(...edges, "```");
-    return out;
-  }
-  const { lines: body } = mermaidBody(nodes, {
-    label: (n, scope) => {
-      const status = statusOf(n.name);
-      return `${status ? STATUS_ICON[status] : "·"} ${scope ? n.name.slice(scope.length + 1) : n.name}`;
-    },
-    classOf: (n) => {
-      const status = statusOf(n.name);
-      return status && MERMAID_CLASS[status];
-    }
-  });
-  return ["```mermaid", "flowchart LR", ...body, ...MERMAID_CLASSDEFS.map((c) => `  ${c}`), "```"];
-}
-function longestChain(nodes) {
-  const counted = new Set(nodes.filter((n) => (n.duration ?? 0) >= CRITICAL_PATH_FLOOR_MS).map((n) => n.name));
-  const total = new Map;
-  const via = new Map;
-  for (const n of nodes) {
-    if (n.duration === undefined)
-      continue;
-    const own = counted.has(n.name) ? n.duration : 0;
-    let best = 0;
-    let bestDep;
-    for (const d of n.deps) {
-      const t = total.get(d) ?? 0;
-      if (t > best) {
-        best = t;
-        bestDep = d;
-      }
-    }
-    total.set(n.name, own + best);
-    via.set(n.name, bestDep);
-  }
-  let end;
-  for (const [name, t] of total)
-    if (end === undefined || t > total.get(end))
-      end = name;
-  if (end === undefined || total.get(end) === 0)
-    return null;
-  const names = [];
-  for (let cur = end;cur !== undefined; cur = via.get(cur))
-    names.unshift(cur);
-  return { names: names.filter((name) => counted.has(name)), total: total.get(end) };
-}
-function renderStatus({ nodes }) {
-  const wall = wallOf(nodes);
-  const busy = sum(nodes.filter(ran).map((n) => n.duration ?? 0));
-  const saved = sum(nodes.filter((n) => n.status === "cached").map((n) => n.previous ?? 0));
-  const hits = namesOf(nodes, "cached").length;
-  const lookups = hits + namesOf(nodes, "done").length;
-  return [
-    `### ${outcome(nodes)}`,
-    "",
-    [
-      counts(nodes, (n) => `**${n}**`),
-      `wall ${formatDuration(wall)}`,
-      ...wall > 0 ? [`parallelism ${(busy / wall).toFixed(1)}×`] : [],
-      ...lookups > 0 ? [`cache ${hits}/${lookups} hits${saved > 0 ? `, ${formatDuration(saved)} saved` : ""}`] : []
-    ].join(" · ")
-  ];
-}
-function renderTimeline({ nodes }) {
-  const bars = byName(nodes).filter(ran).flatMap((n) => n.start === undefined ? [] : `  ${n.name.replace(/:/g, "/")} :${n.status === "fail" ? "crit" : "done"}, ${n.start}, ${n.start + (n.duration ?? 0)}`);
-  if (bars.length === 0)
-    return [];
-  return [
-    "```mermaid",
-    "gantt",
-    "  title node timeline",
-    "  dateFormat x",
-    "  axisFormat %M:%S",
-    "  section nodes",
-    ...bars,
-    "```"
-  ];
-}
-function renderCriticalPath({ nodes }) {
-  const cp = longestChain(nodes);
-  return cp ? [`critical path: ${cp.names.join(" → ")} (${formatDuration(cp.total)})`] : [];
-}
-function renderDag({ nodes }) {
-  const status = new Map(nodes.map((n) => [n.name, n.status]));
-  return nodes.length > 0 ? dagMermaid(nodes, (name) => status.get(name)) : [];
-}
-async function renderFailures({ nodes, log }) {
-  const lines = [];
-  for (const n of nodes) {
-    if (n.status === "dep-failed")
-      lines.push(`- ${STATUS_ICON["dep-failed"]} ${n.name}: skipped, dependency failed`);
-    if (n.status === "cancelled")
-      lines.push(`- ${STATUS_ICON.cancelled} ${n.name}: cancelled`);
-    if (n.status !== "fail")
-      continue;
-    const dur = n.duration !== undefined ? ` (${formatDuration(n.duration)})` : "";
-    lines.push(`<details><summary>${STATUS_ICON.fail} ${n.name}${dur}</summary>`, "", "```text", ...(await log(n.name)).slice(-FAILURE_LOG_LINES), "```", "", "</details>", "");
-  }
-  if (lines.at(-1) === "")
-    lines.pop();
-  return lines.length > 0 ? ["### failures", "", ...lines] : [];
-}
-function renderTable({ nodes }) {
-  return [
-    "| node | status | duration | vs last |",
-    "| --- | --- | --- | --- |",
-    ...byName(nodes).map((n) => {
-      const d = n.duration;
-      const delta = n.status === "done" && d !== undefined && n.previous ? formatDelta(d, n.previous) : "";
-      return `| ${n.name} | ${n.status} | ${d !== undefined ? formatDuration(d) : ""} | ${delta} |`;
-    })
-  ];
-}
-async function renderSummary(title, report, renderers, warn, budget = SUMMARY_BUDGET_BYTES) {
-  const parts = [];
-  for (const [i, render] of renderers.entries()) {
-    const name = render.name || `#${i + 1}`;
-    try {
-      const lines = await render(report);
-      if (lines.length > 0)
-        parts.push([name, lines.join(`
-`)]);
-    } catch (e) {
-      const message = `${name} failed: ${e instanceof Error ? e.message : String(e)}`;
-      warn(message);
-      parts.push([name, `_(${message})_`]);
-    }
-  }
-  if (parts.length === 0)
-    return "";
-  const all = [["heading", `## ${title}`], ...parts];
-  const size = (text) => Buffer.byteLength(text) + 2;
-  let texts = all.map(([, text]) => text);
-  if (sum(texts.map(size)) > budget) {
-    let left = budget;
-    texts = all.map(([name, text]) => {
-      const trimmed = text.replace(LOG_BLOCK, "_(log omitted: summary over the 1 MiB budget)_");
-      if (size(trimmed) > left)
-        return `_(${name} omitted: summary over the 1 MiB budget)_`;
-      left -= size(trimmed);
-      return trimmed;
-    });
-  }
-  return texts.join(`
-
-`) + `
-`;
-}
-
-// packages/dagactions/src/reporter.ts
-var CONCLUSION = {
-  done: "success",
-  cached: "success",
-  fail: "failure",
-  "dep-failed": "skipped",
-  cancelled: "cancelled"
-};
-function iso(ms) {
-  return new Date(ms).toISOString();
-}
-function errorText(e) {
-  return e instanceof Error ? e.message : String(e);
-}
-function isTimeout(e) {
-  return e instanceof Error && e.name === "TimeoutError";
-}
-function failureText(node, e) {
-  if (!isTimeout(e) || node?.timeoutMs === undefined)
-    return errorText(e);
-  const minutes = node.timeoutMs / 60000;
-  const after = minutes >= 1 ? `${+minutes.toFixed(2)} minute${minutes === 1 ? "" : "s"}` : formatDuration(node.timeoutMs);
-  return `The action '${node.name}' has timed out after ${after}.`;
-}
-function lines(text) {
-  const t = text.trimEnd();
-  return t ? t.split(`
-`) : [];
-}
-function createReporter(ports, opts) {
-  const started = new Map;
-  const timing = new Map;
-  const durations = {};
-  let logs = Promise.resolve();
-  let checks = Promise.resolve();
-  const queueLog = (work) => {
-    logs = logs.then(work);
-  };
-  const queueCheck = (update) => {
-    checks = checks.then(() => ports.ci.check(update));
-  };
-  const logLines = async (actionKey) => {
-    const path = logPath(outputDirFor(opts.casBaseDir, actionKey));
-    if (!actionKey || !await ports.fs.exists(path))
-      return [];
-    const all = lines(await ports.fs.readText(path));
-    return all.filter((l) => !l.startsWith("::debug::"));
-  };
-  const failureBody = (log, message) => [
-    ...log,
-    "── error ──",
-    ...lines(message)
-  ];
-  const settle = async (ev, end) => {
-    const name = ev.node.name;
-    const start = started.get(name);
-    if (start !== undefined)
-      timing.set(name, { start, end: Math.max(end, start + 1) });
-    if (start !== undefined && (ev.type === "done" || ev.type === "fail")) {
-      durations[name] = timing.get(name).end - start;
-      await writeLastRun();
-    }
-    const dur = start !== undefined ? formatDuration(end - start) : "";
-    let summary;
-    let body;
-    let conclusion = CONCLUSION[ev.type];
-    switch (ev.type) {
-      case "done":
-        body = await logLines(ev.actionKey);
-        ports.ci.group(`${STATUS_ICON.done} ${name} (${dur})`, body);
-        summary = `done in ${dur}`;
-        break;
-      case "cached":
-        body = await logLines(ev.actionKey);
-        ports.ci.group(`${STATUS_ICON.cached} ${name} (cached)`, body);
-        summary = "cached";
-        break;
-      case "fail": {
-        const message = failureText(ev.node, ev.error);
-        if (isTimeout(ev.error))
-          conclusion = "timed_out";
-        const log = await logLines(ev.actionKey);
-        body = failureBody(log, message);
-        ports.ci.group(`${STATUS_ICON.fail} ${name} (${dur})`, body);
-        ports.ci.annotate("error", name, message);
-        summary = message;
-        break;
-      }
-      case "dep-failed":
-        summary = errorText(ev.error);
-        body = [];
-        ports.ci.info(`${STATUS_ICON["dep-failed"]} ${name}: skipped, ${summary}`);
-        break;
-      case "cancelled":
-        summary = "cancelled";
-        body = await logLines(ev.actionKey);
-        if (ev.actionKey)
-          ports.ci.group(`${STATUS_ICON.cancelled} ${name} (cancelled)`, body);
-        else
-          ports.ci.info(`${STATUS_ICON.cancelled} ${name}: cancelled`);
-        break;
-    }
-    queueCheck({
-      name,
-      status: "completed",
-      conclusion,
-      ...start !== undefined && { startedAt: iso(start) },
-      completedAt: iso(end),
-      summary
-    });
-  };
-  const onEvent = (ev) => {
-    const name = ev.node.name;
-    switch (ev.type) {
-      case "settled":
-        return;
-      case "dispatch":
-        started.set(name, ports.clock.now());
-        return;
-      case "start":
-        queueLog(async () => {
-          const before = previous && (await previous)?.durations[name];
-          ports.ci.info(`▷ ${name}${before ? ` (last run ${formatDuration(before)})` : ""}`);
-        });
-        queueCheck({ name, status: "in_progress", startedAt: iso(started.get(name)) });
-        return;
-      default: {
-        const now = ports.clock.now();
-        queueLog(() => settle(ev, now));
-      }
-    }
-  };
-  const readLastRun = async () => {
-    const path = `${opts.casBaseDir}/${LAST_RUN_FILE}`;
-    if (!await ports.fs.exists(path))
-      return null;
-    try {
-      return JSON.parse(await ports.fs.readText(path));
-    } catch {
-      return null;
-    }
-  };
-  let previous;
-  const lastRun = () => previous ??= readLastRun();
-  const writeLastRun = async () => {
-    const before = (await lastRun())?.durations;
-    await ports.fs.ensureDir(opts.casBaseDir);
-    await ports.fs.writeText(`${opts.casBaseDir}/${LAST_RUN_FILE}`, JSON.stringify({ durations: { ...before, ...durations } }, null, 2));
-  };
-  const nodeOf = new Map(opts.nodes.map((n) => [n.name, n]));
-  const logOf = async (r) => {
-    switch (r.status) {
-      case "done":
-      case "cached":
-        return logLines(r.actionKey);
-      case "fail":
-        return failureBody(await logLines(r.actionKey), failureText(nodeOf.get(r.name), r.error));
-      case "dep-failed":
-        return [r.error.message];
-      case "cancelled":
-        return logLines(r.actionKey);
-    }
-  };
-  const finish = async (results) => {
-    await logs;
-    await checks;
-    const lastDurations = (await lastRun())?.durations ?? {};
-    await writeLastRun();
-    const byName = new Map(results.map((r) => [r.name, r]));
-    const nodes = opts.nodes.flatMap((n) => {
-      const r = byName.get(n.name);
-      if (!r)
-        return [];
-      const t = timing.get(n.name);
-      const before = lastDurations[n.name];
-      return [
-        {
-          ...n,
-          status: r.status,
-          ...t && { start: t.start, duration: t.end - t.start },
-          ...before !== undefined && { previous: before },
-          ...r.status === "fail" && { error: failureText(n, r.error) },
-          ...r.status === "dep-failed" && { error: r.error.message },
-          ...(r.status === "done" || r.status === "cached") && { outputs: r.outputs }
-        }
-      ];
-    });
-    const log = async (name) => {
-      const r = byName.get(name);
-      return r ? logOf(r) : [];
-    };
-    const title = opts.title ?? "dagactions";
-    const markdown = await renderSummary(title, { nodes, log }, opts.summary ?? DEFAULT_SUMMARY_RENDERERS, (message) => ports.ci.annotate("warning", "dagactions summary", message));
-    await ports.ci.summary(markdown);
-    for (const line of ["", ...footer(title, nodes, opts.rerun)])
-      ports.ci.info(line);
-    const failed = results.filter((r) => r.status !== "done" && r.status !== "cached").length;
-    return { failed, markdown };
-  };
-  return { onEvent, finish };
-}
-
-// packages/dagactions/src/select.ts
-function selectNodes(graph, names) {
-  const nodes = graph.getNodes();
-  const keep = new Set;
-  const visit = (name) => {
-    if (keep.has(name))
-      return;
-    const node = nodes.get(name);
-    if (!node)
-      throw new Error(`unknown node "${name}"`);
-    keep.add(name);
-    node.deps.forEach(visit);
-  };
-  names.forEach(visit);
-  const out = new Graph;
-  for (const name of validateNoCycles(nodes))
-    if (keep.has(name))
-      out.add(nodes.get(name));
-  return out;
-}
-
 // packages/dagactions/src/runner.ts
-var titleOf = (workflowFile) => workflowFile ? `dagactions · ${workflowFile}` : "dagactions";
+var runOutcomeOf = (outcome) => ({
+  ...outcome,
+  exitCode: outcome.cancelled ? 130 : outcome.failed > 0 ? 1 : 0
+});
 async function buildGraph(opts) {
   const ctx = await opts.ports.ci.context();
   const full = new Graph;
   await opts.workflow(full, opts.ports, ctx);
   const graph = opts.only?.length ? selectNodes(full, opts.only) : full;
-  const posts = postNodes(full).filter((n) => graph.getNodes().has(n));
+  const posts = postNodes(full).filter((nodeName) => graph.getNodes().has(nodeName));
   return { ctx, graph, posts, total: full.getNodes().size };
 }
 async function runWorkflow(opts) {
+  const store = opts.store ?? createGithubStore(opts.ports, opts.casBaseDir);
+  opts.signal?.addEventListener("abort", store.cancel, { once: true });
   const { ports } = opts;
   const { ctx, graph, total } = await buildGraph(opts);
   const names = [...graph.getNodes().keys()];
   const count = `${total} node${total === 1 ? "" : "s"}`;
   const scope = opts.only?.length ? `${names.length} of ${count} (--only ${opts.only.join(",")})` : count;
-  ports.ci.group(`dagactions · ${ctx.provider} · ref=${ctx.ref} · ${scope}${opts.force ? " · force" : ""}`, names);
-  await ports.fs.ensureDir(opts.casBaseDir);
-  const reporter = createReporter(ports, {
-    casBaseDir: opts.casBaseDir,
-    nodes: graph.describe(),
+  const rerunCommand = opts.rerunCommand ?? (opts.workflowFile && `${RERUN_COMMAND} ${opts.workflowFile}`);
+  const pass = {
+    banner: {
+      title: [opts.workflowFile, ctx.ref && `ref=${ctx.ref}`, scope, opts.force && "force"].filter(Boolean).join(" · "),
+      lines: names
+    },
     title: titleOf(opts.workflowFile),
-    ...opts.workflowFile && { rerun: `npx dagactions run ${opts.workflowFile}` },
-    ...opts.summary && { summary: opts.summary }
-  });
+    nodes: graph.describe(),
+    ...rerunCommand && { rerunCommand }
+  };
+  store.begin(pass);
+  await ports.fs.ensureDir(opts.casBaseDir);
   const journal = createJournal(ports.fs, opts.journalPath ?? DEFAULT_JOURNAL_PATH);
   await journal.begin();
   const results = await execute(graph, { cache: new FsCache(opts.casBaseDir, ports.fs), fs: ports.fs, casBaseDir: opts.casBaseDir }, {
     force: opts.force ?? false,
     scheduler: throttledScheduler(opts.limits),
-    onEvent: (ev) => {
-      reporter.onEvent(ev);
-      journal.onEvent(ev);
+    onOutput: store.onOutput,
+    onEvent: (event) => {
+      store.onEvent(event);
+      journal.onEvent(event);
     },
     ...opts.signal && { signal: opts.signal }
   });
   await journal.flush();
-  const { failed, markdown } = await reporter.finish(results);
-  return { results, failed, markdown, cancelled: opts.signal?.aborted ?? false };
+  const { failed, markdown } = await finishPass(ports, store, pass, results, opts.summary);
+  return runOutcomeOf({ results, failed, markdown, cancelled: opts.signal?.aborted ?? false });
 }
 function replay(name, entry) {
   switch (entry?.status) {
@@ -64969,21 +65215,23 @@ function replay(name, entry) {
   }
 }
 async function runPost(opts) {
+  const store = opts.store ?? createGithubStore(opts.ports, opts.casBaseDir);
   const { ports } = opts;
   const { graph, posts } = await buildGraph(opts);
   const journalPath = opts.journalPath ?? DEFAULT_JOURNAL_PATH;
   const before = await readJournal(ports.fs, journalPath);
-  const owed = new Set(posts.filter((n) => !before[n] || before[n].status === "cancelled"));
-  ports.ci.group(`dagactions · post · ${owed.size} of ${posts.length} post steps owed`, [...owed]);
-  if (owed.size === 0)
-    return { results: [], failed: 0, markdown: "", cancelled: false };
-  const nodes = graph.getNodes();
-  const reporter = createReporter(ports, {
-    casBaseDir: opts.casBaseDir,
-    nodes: graph.describe().filter((n) => owed.has(n.name)).map((n) => ({ ...n, deps: n.deps.filter((d) => owed.has(d)) })),
+  const owed = new Set(posts.filter((nodeName) => !before[nodeName] || before[nodeName].status === "cancelled"));
+  const pass = {
+    ...owed.size > 0 && {
+      banner: { title: `post · ${owed.size} of ${posts.length} post steps owed`, lines: [...owed] }
+    },
     title: `${titleOf(opts.workflowFile)} · post`,
-    ...opts.summary && { summary: opts.summary }
-  });
+    nodes: graph.describe().filter((node) => owed.has(node.name)).map((node) => ({ ...node, deps: node.deps.filter((dep) => owed.has(dep)) }))
+  };
+  store.begin(pass);
+  if (owed.size === 0)
+    return runOutcomeOf({ results: [], failed: 0, markdown: "", cancelled: false });
+  const nodes = graph.getNodes();
   const journal = createJournal(ports.fs, journalPath, before);
   const ctx = {
     cache: new FsCache(opts.casBaseDir, ports.fs),
@@ -64991,16 +65239,39 @@ async function runPost(opts) {
     casBaseDir: opts.casBaseDir,
     inputHashes: new Map
   };
-  const all = await orchestrate(nodes.values(), (node, depHashes, depOutputs, started) => owed.has(node.name) ? processNode(nodes.get(node.name), depHashes, depOutputs, ctx, { onStart: started }) : Promise.resolve(replay(node.name, before[node.name])), throttledScheduler(opts.limits), (ev) => {
-    if (!owed.has(ev.node.name))
+  const all = await orchestrate(nodes.values(), (node, depHashes, depOutputs, started) => owed.has(node.name) ? processNode(nodes.get(node.name), depHashes, depOutputs, ctx, {
+    onStart: started,
+    onOutput: (chunk) => store.onOutput(node, chunk)
+  }) : Promise.resolve(replay(node.name, before[node.name])), throttledScheduler(opts.limits), (event) => {
+    if (!owed.has(event.node.name))
       return;
-    reporter.onEvent(ev);
-    journal.onEvent(ev);
+    store.onEvent(event);
+    journal.onEvent(event);
   });
   await journal.flush();
-  const results = all.filter((r) => owed.has(r.name));
-  const { failed, markdown } = await reporter.finish(results);
-  return { results, failed, markdown, cancelled: false };
+  const results = all.filter((result) => owed.has(result.name));
+  const { failed, markdown } = await finishPass(ports, store, pass, results, opts.summary);
+  return runOutcomeOf({ results, failed, markdown, cancelled: false });
+}
+async function runJob(opts, processEvents) {
+  const interrupt = () => opts.store?.interrupt();
+  processEvents.once("exit", interrupt);
+  try {
+    let error;
+    try {
+      const outcome = await runWorkflow(opts);
+      if (outcome.cancelled)
+        await runPost(opts);
+      return outcome.exitCode;
+    } catch (e) {
+      error = e;
+      throw e;
+    } finally {
+      await opts.store?.close(error);
+    }
+  } finally {
+    processEvents.off("exit", interrupt);
+  }
 }
 
 // node_modules/.bun/@actions+artifact@6.3.1/node_modules/@actions/artifact/lib/internal/shared/config.js
@@ -68679,15 +68950,15 @@ function redirectPolicy2(options = {}) {
 }
 
 // node_modules/.bun/@azure+core-rest-pipeline@1.23.0/node_modules/@azure/core-rest-pipeline/dist/esm/util/userAgentPlatform.js
-import os8 from "node:os";
-import process4 from "node:process";
+import os9 from "node:os";
+import process5 from "node:process";
 function getHeaderName2() {
   return "User-Agent";
 }
 async function setPlatformSpecificData2(map) {
-  if (process4 && process4.versions) {
-    const osInfo = `${os8.type()} ${os8.release()}; ${os8.arch()}`;
-    const versions = process4.versions;
+  if (process5 && process5.versions) {
+    const osInfo = `${os9.type()} ${os9.release()}; ${os9.arch()}`;
+    const versions = process5.versions;
     if (versions.bun) {
       map.set("Bun", `${versions.bun} (${osInfo})`);
     } else if (versions.deno) {
@@ -102708,13 +102979,13 @@ function saveCacheV2(paths_1, key_1, options_1) {
 import { createHash as createHash5 } from "node:crypto";
 import { createReadStream as createReadStream4 } from "node:fs";
 import { access as access3, mkdir as mkdir2, readFile, writeFile as writeFile2 } from "node:fs/promises";
-import { dirname as dirname5 } from "node:path";
+import { dirname as dirname6 } from "node:path";
 function createNodeDagFs() {
   return {
     exists: (path) => access3(path).then(() => true, () => false),
     readText: (path) => readFile(path, "utf8"),
     writeText: async (path, content) => {
-      await mkdir2(dirname5(path), { recursive: true });
+      await mkdir2(dirname6(path), { recursive: true });
       await writeFile2(path, content);
     },
     hashFile: async (path) => {
@@ -102905,13 +103176,7 @@ ${runLog}`
 }
 
 // packages/dagactions/src/action/env.ts
-async function actionOptions(bundleUrl) {
-  registerHooks({
-    resolve: (specifier, context, next) => specifier === "@mrmeku/dagactions" ? { url: bundleUrl, shortCircuit: true } : next(specifier, context)
-  });
-  const file = getInput("workflow", { required: true });
-  const def = (await import(pathToFileURL(resolve4(file)).href)).default;
-  const ci = createGithubCi({ token: process.env["GITHUB_TOKEN"] });
+function noticeUnavailableServices() {
   if (!isFeatureAvailable())
     notice("actions/cache is off: no cache service in this environment", {
       title: "dagactions"
@@ -102920,6 +103185,14 @@ async function actionOptions(bundleUrl) {
     notice("actions/upload-artifact is off: no artifact service in this environment", {
       title: "dagactions"
     });
+}
+async function actionOptions(bundleUrl) {
+  registerHooks({
+    resolve: (specifier, context, next) => specifier === "@mrmeku/dagactions" ? { url: bundleUrl, shortCircuit: true } : next(specifier, context)
+  });
+  const file = getInput("workflow", { required: true });
+  const def = (await import(pathToFileURL(resolve4(file)).href)).default;
+  const ci = createGithubCi({ token: process.env["GITHUB_TOKEN"] });
   const only = getInput("only").split(",").filter(Boolean);
   return {
     workflow: def.workflow,
@@ -102942,6 +103215,8 @@ async function actionOptions(bundleUrl) {
   };
 }
 // packages/dagactions/src/ports/local.ts
+import { dirname as dirname7 } from "node:path";
+import { stripVTControlCharacters as stripVTControlCharacters2 } from "node:util";
 function createLocalCi(opts) {
   const write = opts.write ?? ((line) => console.log(line));
   let written = false;
@@ -102968,12 +103243,10 @@ function createLocalCi(opts) {
       write(`[${level}] ${title}: ${message}`);
     },
     summary: async (markdown) => {
-      const dir = opts.summaryPath.slice(0, opts.summaryPath.lastIndexOf("/"));
-      if (dir)
-        await opts.fs.ensureDir(dir);
+      await opts.fs.ensureDir(dirname7(opts.summaryPath));
       const before = written && await opts.fs.exists(opts.summaryPath) ? await opts.fs.readText(opts.summaryPath) : "";
       written = true;
-      await opts.fs.writeText(opts.summaryPath, before + markdown);
+      await opts.fs.writeText(opts.summaryPath, before + stripVTControlCharacters2(markdown));
       write(`summary: ${opts.summaryPath}`);
     },
     check: async () => {}
@@ -103083,11 +103356,12 @@ function defineWorkflow(def) {
 }
 // packages/dagactions/src/action/main.ts
 async function main() {
-  const { failed, cancelled } = await runWorkflow({
+  noticeUnavailableServices();
+  const outcome = await runWorkflow({
     ...await actionOptions(import.meta.url),
     signal: abortOnSignals()
   });
-  process.exitCode = cancelled ? 130 : failed > 0 ? 1 : 0;
+  process.exitCode = outcome.exitCode;
 }
 main().catch((e) => {
   console.error(e);
@@ -103110,6 +103384,7 @@ export {
   createMemoryActionsCache,
   createRecordingCi,
   createReporter,
+  createRunStore,
   createSh,
   createSteps,
   createTestPorts,
@@ -103133,9 +103408,11 @@ export {
   renderStatus,
   renderTable,
   renderTimeline,
+  runJob,
   runPost,
   runWorkflow,
   selectNodes,
+  exports_selectors as selectors,
   steppingClock,
   systemClock
 };
